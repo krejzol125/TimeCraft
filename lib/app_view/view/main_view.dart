@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:timecraft/model/task_instance.dart';
-import 'package:timecraft/service/bloc/app_cubit.dart';
-import 'package:timecraft/service/bloc/app_state.dart';
-import 'package:timecraft/service/repo/repo_service.dart';
-import 'package:timecraft/view/WeekCalendar/week_calendar.dart';
-import 'package:timecraft/view/add_task_sheet.dart';
-import 'package:timecraft/view/undated_drawer.dart';
+import 'package:timecraft/app_view/bloc/app_cubit.dart';
+import 'package:timecraft/app_view/bloc/app_state.dart';
+import 'package:timecraft/week_calendar/view/week_calendar.dart';
+import 'package:timecraft/add_task_sheet/view/add_task_sheet.dart';
+import 'package:timecraft/undated_drawer/view/undated_drawer.dart';
 
 class MainView extends StatelessWidget {
   MainView({super.key});

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:timecraft/model/drag_data.dart';
 import 'package:timecraft/model/task_instance.dart';
+import 'package:timecraft/undated_drawer/view/undated_task_draggable_tile.dart';
 
 class UndatedDrawer extends StatelessWidget {
   const UndatedDrawer({required this.undated, required this.onDragStartClose});
@@ -48,12 +48,12 @@ class UndatedDrawer extends StatelessWidget {
                         ),
                         itemBuilder: (ctx, i) {
                           final t = undated[i];
-                          return _UndatedTaskDraggable(
+                          return UndatedDraggableTaskTile(
                             task: t,
                             onDragStartClose: onDragStartClose,
                           );
                         },
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        separatorBuilder: (_, _) => const SizedBox(height: 8),
                         itemCount: undated.length,
                       ),
               ),
@@ -61,43 +61,6 @@ class UndatedDrawer extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _UndatedTaskDraggable extends StatelessWidget {
-  const _UndatedTaskDraggable({
-    required this.task,
-    required this.onDragStartClose,
-  });
-
-  final TaskInstance task;
-  final VoidCallback onDragStartClose;
-
-  @override
-  Widget build(BuildContext context) {
-    final card = Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      child: ListTile(
-        leading: const Icon(Icons.drag_indicator),
-        title: Text(task.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: Text(
-          task.description.isEmpty ? 'No description' : task.description,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: const Icon(Icons.calendar_today_outlined, size: 18),
-      ),
-    );
-
-    return Draggable<DragData>(
-      data: DragData(task, DragMode.move),
-      onDragStarted:
-          onDragStartClose, // <<< zamknij szufladę gdy zaczynasz drag
-      feedback: const SizedBox.shrink(),
-      childWhenDragging: Opacity(opacity: 0.4, child: card),
-      child: card,
     );
   }
 }

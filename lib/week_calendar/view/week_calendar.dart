@@ -4,8 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:timecraft/model/drag_data.dart';
 import 'package:timecraft/model/task_instance.dart';
-import 'package:timecraft/service/bloc/app_cubit.dart';
-import 'package:timecraft/view/WeekCalendar/task_tile.dart';
+import 'package:timecraft/app_view/bloc/app_cubit.dart';
+import 'package:timecraft/week_calendar/view/ghost_tile.dart';
+import 'package:timecraft/week_calendar/view/task_tile.dart';
 
 /// ================================================
 

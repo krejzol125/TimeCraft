@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:timecraft/service/bloc/app_cubit.dart';
-import 'package:timecraft/service/repo/repo_service.dart';
-import 'package:timecraft/view/WeekCalendar/week_calendar.dart';
-import 'package:timecraft/view/main_view.dart';
+import 'package:timecraft/app_view/bloc/app_cubit.dart';
+import 'package:timecraft/repo/repo_service.dart';
+import 'package:timecraft/week_calendar/view/week_calendar.dart';
+import 'package:timecraft/app_view/view/main_view.dart';
 
 void main() {
   runApp(const MyApp());

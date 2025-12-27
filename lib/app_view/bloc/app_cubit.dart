@@ -1,8 +1,7 @@
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:timecraft/model/task_instance.dart';
-import 'package:timecraft/service/bloc/app_state.dart';
-import 'package:timecraft/service/repo/repo_service.dart';
+import 'package:timecraft/app_view/bloc/app_state.dart';
+import 'package:timecraft/repo/repo_service.dart';
 
 class AppCubit extends Cubit<AppState> {
   //List<TaskInstance> tasks = [];

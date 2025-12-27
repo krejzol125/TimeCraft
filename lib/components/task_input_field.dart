@@ -1,11 +1,12 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:timecraft/system_design/tc_fext_field.dart';
 
 class TaskInputParsed {
   final String raw;
-  final String title; // tekst bez hashtagów
-  final List<String> tags; // bez '#', unikalne, znormalizowane
-  final String? error; // null jeśli ok
+  final String title;
+  final List<String> tags;
+  final String? error;
 
   const TaskInputParsed({
     required this.raw,
@@ -15,38 +16,25 @@ class TaskInputParsed {
   });
 }
 
-/// Tag = # + token bez spacji i bez '#'
-/// Łapiemy również poprzedzający whitespace (żeby zachować go w spanie)
-final RegExp _tagMatch = RegExp(
-  r'(^|\s)#([^\s#]*)',
-); // drugi group może być pusty (do walidacji)
+final RegExp _tagMatch = RegExp(r'(^|\s)#([^\s#]*)');
 
-/// Dozwolone znaki w nazwie taga (po '#').
-/// Zmień jeśli chcesz np. kropki.
 final RegExp _allowedTagChars = RegExp(r'^[a-z0-9_/-]+$');
 
 String _normTag(String t) => t.trim().toLowerCase();
 
-TaskInputParsed parseTaskInputAdvanced(
-  String text, {
-  bool normalizeLowercase = true,
-}) {
+TaskInputParsed parseTaskInputAdvanced(String text) {
   final tags = <String>[];
   String? error;
 
-  // wykryj tagi i waliduj
   for (final m in _tagMatch.allMatches(text)) {
     final token = (m.group(2) ?? '');
 
-    // token pusty => "#"
     if (token.isEmpty) {
-      // Jeśli user dopiero wpisuje, nie musisz od razu krzyczeć.
-      // Ale wymóg: "blokuj # bez nazwy" => zwracamy błąd.
       error ??= 'Hashtag "#" must have a name (e.g. #work).';
       continue;
     }
 
-    final norm = normalizeLowercase ? _normTag(token) : token.trim();
+    final norm = _normTag(token);
     if (!_allowedTagChars.hasMatch(norm)) {
       error ??=
           'Tag "#$token" contains invalid characters. Allowed: a-z 0-9 _ / -';
@@ -55,17 +43,14 @@ TaskInputParsed parseTaskInputAdvanced(
     tags.add(norm);
   }
 
-  // title = tekst bez hashtagów, normalizacja spacji
   final title = text
       .replaceAllMapped(_tagMatch, (m) {
-        // usuń cały match, ale zostaw pojedynczą spację jeśli była
         final prefix = m.group(1) ?? '';
-        return prefix.isEmpty ? ' ' : prefix; // prefix jest whitespace
+        return prefix.isEmpty ? ' ' : prefix;
       })
       .replaceAll(RegExp(r'\s+'), ' ')
       .trim();
 
-  // unikalne tagi w kolejności
   final seen = <String>{};
   final unique = <String>[];
   for (final t in tags) {
@@ -80,17 +65,11 @@ class HashtagHighlightController extends TextEditingController {
 
   TextStyle baseStyle = const TextStyle(fontSize: 16);
 
-  // wygląd taga (łatwy do edycji)
   Color tagColor = const Color(0xFF2563EB);
-  Color? tagBackground = const Color(
-    0x332563EB,
-  ); // delikatne tło (możesz dać null)
+  Color? tagBackground = const Color(0x332563EB);
 
-  // błędny tag
   Color invalidColor = const Color(0xFF991B1B);
   Color? invalidBackground = const Color(0x33F87171);
-
-  bool normalizeLowercase = true;
 
   @override
   TextSpan buildTextSpan({
@@ -109,7 +88,6 @@ class HashtagHighlightController extends TextEditingController {
       final start = m.start;
       final end = m.end;
 
-      // przed tagiem
       if (start > index) {
         spans.add(TextSpan(text: text.substring(index, start), style: base));
       }
@@ -120,14 +98,12 @@ class HashtagHighlightController extends TextEditingController {
       }
 
       final rawToken = (m.group(2) ?? '');
-      final norm = normalizeLowercase ? _normTag(rawToken) : rawToken.trim();
+      final norm = _normTag(rawToken);
       final isValid = rawToken.isNotEmpty && _allowedTagChars.hasMatch(norm);
-
-      final shown = '#${normalizeLowercase ? norm : rawToken}';
 
       spans.add(
         TextSpan(
-          text: shown,
+          text: '#$norm',
           style: base.copyWith(
             color: isValid ? tagColor : invalidColor,
             fontWeight: FontWeight.w700,
@@ -139,7 +115,6 @@ class HashtagHighlightController extends TextEditingController {
       index = end;
     }
 
-    // końcówka
     if (index < text.length) {
       spans.add(TextSpan(text: text.substring(index), style: base));
     }
@@ -148,27 +123,20 @@ class HashtagHighlightController extends TextEditingController {
   }
 }
 
-/// Główny widget: input + autocomplete + walidacja + parsing
 class TaskInputAdvancedField extends StatefulWidget {
   const TaskInputAdvancedField({
     super.key,
     required this.availableTags,
     required this.onChanged,
     this.initialText,
-    this.hintText = 'Np. Zrobić raport #work #pilne',
-    this.normalizeLowercase = true,
     this.maxSuggestions = 6,
   });
 
-  /// Lista znanych tagów do podpowiedzi (bez '#')
   final List<String> availableTags;
 
-  /// Callback: dostajesz (raw, title, tags, error)
   final void Function(TaskInputParsed parsed) onChanged;
 
   final String? initialText;
-  final String hintText;
-  final bool normalizeLowercase;
   final int maxSuggestions;
 
   @override
@@ -179,26 +147,17 @@ class _TaskInputAdvancedFieldState extends State<TaskInputAdvancedField> {
   late final HashtagHighlightController _controller;
   final FocusNode _focus = FocusNode();
 
-  // Overlay do autocomplete
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _overlay;
 
-  //String? _activeQuery; // aktualnie wpisywane po '#'
   String? _errorText;
 
   @override
   void initState() {
     super.initState();
-    _controller = HashtagHighlightController(text: widget.initialText ?? '')
-      ..normalizeLowercase = widget.normalizeLowercase;
+    _controller = HashtagHighlightController(text: widget.initialText ?? '');
 
     _controller.addListener(_onTextOrSelectionChanged);
-    // _focus.addListener(() {
-    //   if (!_focus.hasFocus) _hideOverlay();
-    //   _emitParsed(); // walidacja też przy blur
-    // });
-
-    //WidgetsBinding.instance.addPostFrameCallback((_) => _emitParsed());
   }
 
   @override
@@ -211,10 +170,7 @@ class _TaskInputAdvancedFieldState extends State<TaskInputAdvancedField> {
   }
 
   void _emitParsed() {
-    final parsed = parseTaskInputAdvanced(
-      _controller.text,
-      normalizeLowercase: widget.normalizeLowercase,
-    );
+    final parsed = parseTaskInputAdvanced(_controller.text);
     setState(() => _errorText = parsed.error);
     widget.onChanged(parsed);
   }
@@ -226,12 +182,10 @@ class _TaskInputAdvancedFieldState extends State<TaskInputAdvancedField> {
 
     final query = _extractHashtagQueryAtCursor();
     if (query == null) {
-      //_activeQuery = null;
       _hideOverlay();
       return;
     }
 
-    //_activeQuery = query;
     final suggestions = _computeSuggestions(query);
 
     if (suggestions.isEmpty) {
@@ -242,44 +196,30 @@ class _TaskInputAdvancedFieldState extends State<TaskInputAdvancedField> {
     }
   }
 
-  /// Zwraca token po # w miejscu kursora, np. "wo" dla "#wo|"
   String? _extractHashtagQueryAtCursor() {
-    final sel = _controller.selection;
-    if (!sel.isValid) return null;
-    final pos = sel.baseOffset;
-    if (pos < 0) return null;
+    final pos = _controller.selection.baseOffset;
 
     final text = _controller.text;
     final left = text.substring(0, math.min(pos, text.length));
 
-    // znajdź ostatni separator (whitespace)
-    final lastWs = left.lastIndexOf(RegExp(r'\s'));
-    final tokenStart = lastWs + 1;
+    final lastSpace = left.lastIndexOf(RegExp(r' '));
+    final tokenStart = lastSpace + 1;
 
-    final token = left.substring(tokenStart); // od ostatniej spacji do kursora
+    final token = left.substring(tokenStart);
     if (!token.startsWith('#')) return null;
 
-    final query = token.substring(1); // po '#'
-    // jeśli user ma samo "#", też pokaż podpowiedzi (query pusty)
-    // ale walidacja i tak pokaże błąd jeśli zostawi to samo
+    final query = token.substring(1);
     return query;
   }
 
   List<String> _computeSuggestions(String query) {
-    final q = widget.normalizeLowercase ? query.toLowerCase() : query;
+    final q = query.toLowerCase();
 
-    final base = widget.availableTags
-        .map((t) => widget.normalizeLowercase ? t.toLowerCase() : t)
-        .toList();
+    final base = widget.availableTags.map((t) => t.toLowerCase()).toList();
 
-    final filtered = base
-        .where(
-          (t) => _allowedTagChars.hasMatch(t) && (q.isEmpty || t.startsWith(q)),
-        )
-        .toList();
+    final filtered = base.where((t) => q.isEmpty || t.startsWith(q)).toList();
 
     filtered.sort((a, b) {
-      // krótsze i bliższe prefiksowi wyżej
       final da = (a.length - q.length).abs();
       final db = (b.length - q.length).abs();
       final c = da.compareTo(db);
@@ -291,7 +231,6 @@ class _TaskInputAdvancedFieldState extends State<TaskInputAdvancedField> {
 
   void _showOverlay(List<String> suggestions) {
     if (_overlay != null) {
-      _overlay!.markNeedsBuild();
       return;
     }
 
@@ -300,7 +239,6 @@ class _TaskInputAdvancedFieldState extends State<TaskInputAdvancedField> {
         return Positioned.fill(
           child: Stack(
             children: [
-              // klik poza -> zamknij
               Positioned.fill(
                 child: GestureDetector(
                   onTap: _hideOverlay,
@@ -310,7 +248,7 @@ class _TaskInputAdvancedFieldState extends State<TaskInputAdvancedField> {
               CompositedTransformFollower(
                 link: _layerLink,
                 showWhenUnlinked: false,
-                offset: const Offset(0, 56), // pod polem
+                offset: const Offset(0, 56),
                 child: Material(
                   elevation: 10,
                   borderRadius: BorderRadius.circular(12),
@@ -341,22 +279,21 @@ class _TaskInputAdvancedFieldState extends State<TaskInputAdvancedField> {
   }
 
   void _applySuggestion(String tag) {
-    // Zamień aktualny "#query" (od ostatniej spacji do kursora) na "#tag "
     final pos = _controller.selection.baseOffset;
     final text = _controller.text;
 
     final left = text.substring(0, pos);
     final right = text.substring(pos);
 
-    final lastWs = left.lastIndexOf(RegExp(r' '));
-    final tokenStart = lastWs == -1 ? 0 : lastWs + 1;
+    final lastSpace = left.lastIndexOf(RegExp(r' '));
+    final tokenStart = lastSpace == -1 ? 0 : lastSpace + 1;
 
     final beforeToken = left.substring(0, tokenStart);
     final token = left.substring(tokenStart);
 
     if (!token.startsWith('#')) return;
 
-    final normalized = widget.normalizeLowercase ? tag.toLowerCase() : tag;
+    final normalized = tag.toLowerCase();
     final replacement = '#$normalized ';
 
     final newText = '$beforeToken$replacement$right';
@@ -370,29 +307,40 @@ class _TaskInputAdvancedFieldState extends State<TaskInputAdvancedField> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final tagButton = IconButton(
+      onPressed: () {
+        int cursorPos = _controller.selection.baseOffset;
+        if (cursorPos == -1) cursorPos = _controller.text.length;
+        final text = _controller.text;
+        final newText =
+            "${text.substring(0, cursorPos)} #${text.substring(cursorPos)}";
+        final newCursorPos = cursorPos + 2;
+
+        _controller.value = TextEditingValue(
+          text: newText,
+          selection: TextSelection.collapsed(offset: newCursorPos),
+        );
+
+        FocusScope.of(context).requestFocus(_focus);
+      },
+      icon: const Icon(Icons.tag),
+      tooltip: 'Add a tag',
+      color: Theme.of(context).colorScheme.primary,
+
+      //label: const Text('Tag'),
+    );
 
     return CompositedTransformTarget(
       link: _layerLink,
-      child: TextField(
+      child: TcTextField(
         controller: _controller,
+        labelText: 'Title',
+        leading: const Icon(Icons.task_alt_outlined),
+        trailing: tagButton,
         focusNode: _focus,
-        decoration: InputDecoration(
-          hintText: widget.hintText,
-          helperText: 'You can add hashtags like #work or #urgent.',
-          errorText: _errorText,
-          filled: true,
-          fillColor: theme.colorScheme.surface,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: theme.dividerColor),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 14,
-            vertical: 12,
-          ),
-        ),
+        errorText: _errorText,
+        hintText: 'Np. Zrobić raport #work #pilne',
+        helperText: 'You can add hashtags like #work or #urgent.',
       ),
     );
   }
@@ -410,7 +358,7 @@ class _SuggestionsList extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       shrinkWrap: true,
       itemCount: suggestions.length,
-      separatorBuilder: (_, __) => const Divider(height: 1),
+      separatorBuilder: (_, _) => const Divider(height: 1),
       itemBuilder: (context, i) {
         final t = suggestions[i];
         return ListTile(

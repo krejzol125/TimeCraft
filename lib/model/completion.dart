@@ -8,7 +8,7 @@ abstract class Completion {
 
   static Completion? fromJson(String json) {
     List<String> values = json.trim().split(" ");
-    if (values.length < 1) return null;
+    if (values.isEmpty) return null;
     switch (int.parse(values[0])) {
       case 0:
         return BinaryCompletion(
@@ -47,7 +47,7 @@ class BinaryCompletion extends Completion {
 
   @override
   String toJson() {
-    return "0 ${comp} ${completionTime != null ? completionTime!.toIso8601String() : ""}";
+    return "0 $comp ${completionTime != null ? completionTime!.toIso8601String() : ""}";
   }
 }
 
@@ -61,6 +61,7 @@ class QuantityCompletion extends Completion {
   @override
   bool get isCompleted => cap == comp;
 
+  @override
   void mark(int completed) {
     comp = max(min(cap, completed), 0);
     if (cap == comp) completionTime = DateTime.now();
@@ -68,6 +69,6 @@ class QuantityCompletion extends Completion {
 
   @override
   String toJson() {
-    return "1 ${cap} ${comp} ${completionTime != null ? completionTime!.toIso8601String() : ""}";
+    return "1 $cap $comp ${completionTime != null ? completionTime!.toIso8601String() : ""}";
   }
 }

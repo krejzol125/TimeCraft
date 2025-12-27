@@ -1,6 +1,6 @@
 import 'package:timecraft/model/task_instance.dart';
-import 'package:timecraft/service/repo/i_repo.dart';
-import 'package:timecraft/service/repo/mock_repo.dart';
+import 'package:timecraft/repo/i_repo.dart';
+import 'package:timecraft/repo/mock_repo.dart';
 
 class RepoService {
   final IRepo repo;

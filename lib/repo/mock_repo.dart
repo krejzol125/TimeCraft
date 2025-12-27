@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:timecraft/model/task_instance.dart';
-import 'package:timecraft/service/repo/i_repo.dart';
+import 'package:timecraft/repo/i_repo.dart';
 
 class MockRepo implements IRepo {
   List<TaskInstance> get _tasks => _tasksMap.values.toList();
