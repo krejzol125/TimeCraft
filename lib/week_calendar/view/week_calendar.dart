@@ -188,12 +188,11 @@ class _WeekcalendarState extends State<Weekcalendar> {
   void _updateTaskTime(TaskInstance t, DateTime newStart) {
     // jeśli zadanie nie ma czasu, przyjmij domyślną długość
     final Duration dur = t.duration ?? _defaultDuration;
-    final DateTime newEnd = newStart.add(dur);
 
     setState(() {
-      final idx = tasks.indexWhere((x) => x.id == t.id);
+      final idx = tasks.indexWhere((x) => x.taskId == t.taskId);
       if (idx != -1) {
-        tasks[idx] = tasks[idx].copyWith(startTime: newStart, endTime: newEnd);
+        tasks[idx] = tasks[idx].copyWith(startTime: newStart, duration: dur);
       }
     });
   }
@@ -205,9 +204,11 @@ class _WeekcalendarState extends State<Weekcalendar> {
     );
     final safeEnd = newEnd.isAfter(minEnd) ? newEnd : minEnd;
     setState(() {
-      final idx = tasks.indexWhere((x) => x.id == t.id);
+      final idx = tasks.indexWhere((x) => x.taskId == t.taskId);
       if (idx != -1) {
-        tasks[idx] = tasks[idx].copyWith(endTime: safeEnd);
+        tasks[idx] = tasks[idx].copyWith(
+          duration: safeEnd.difference(t.startTime!),
+        );
       }
     });
   }
@@ -497,7 +498,7 @@ class _WeekcalendarState extends State<Weekcalendar> {
               _updateTaskEnd(data.task, end);
             }
             context.read<AppCubit>().updateTask(
-              tasks.where((t) => t.id == data.task.id).first,
+              tasks.where((t) => t.taskId == data.task.taskId).first,
             );
             _clearGhost();
           },

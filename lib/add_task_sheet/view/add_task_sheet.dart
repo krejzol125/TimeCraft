@@ -101,12 +101,14 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
         .toList();
 
     final task = TaskInstance(
-      id: id,
+      taskId: id.toString(),
       title: _title.trim(),
       completion: BinaryCompletion(false),
       description: _descCtrl.text.trim(),
       startTime: _start,
-      endTime: _end,
+      duration: _start != null && _end != null
+          ? _end!.difference(_start!)
+          : null,
       tags: tags,
       priority: _priority,
       reminders: const [],

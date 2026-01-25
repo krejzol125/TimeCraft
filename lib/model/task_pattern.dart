@@ -1,14 +1,11 @@
 import 'package:drift/drift.dart';
 import 'package:timecraft/model/completion.dart';
 import 'package:timecraft/model/noti_reminder.dart';
-import 'package:timecraft/model/task_override.dart';
-import 'package:timecraft/model/task_pattern.dart';
+import 'package:rrule/rrule.dart';
 import 'package:timecraft/repo/drift/local_db.dart';
 
-class TaskInstance {
-  String taskId;
-  DateTime? rid;
-
+class TaskPattern {
+  String id;
   String title;
   Completion completion;
 
@@ -19,77 +16,86 @@ class TaskInstance {
   DateTime? get endTime => (startTime != null && duration != null)
       ? startTime!.add(duration!)
       : null;
+  RecurrenceRule? rrule;
 
   List<String> tags;
   int priority;
   List<NotiReminder> reminders;
-  List<(String name, bool completed)> subTasks;
+  List<String> subTasks;
 
-  TaskInstance({
-    required this.taskId,
+  bool deleted = false;
+  int rev = 0;
+
+  DateTime createdAt;
+  DateTime updatedAt;
+
+  TaskPattern({
+    required this.id,
     required this.title,
     Completion? completion,
     this.description = '',
     this.startTime,
     this.duration,
+    this.rrule,
     this.tags = const [],
     this.priority = 3,
     this.reminders = const [],
     this.subTasks = const [],
-  }) : completion = completion ?? BinaryCompletion(false);
+    this.deleted = false,
+    this.rev = 0,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) : createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now(),
+       completion = completion ?? BinaryCompletion(false);
 
-  TaskInstance.fromPattern(
-    TaskPattern tp,
-    DateTime? startTime, {
-    TaskOverride? taskOverride,
-  }) : taskId = tp.id,
-       rid = startTime,
-       title = taskOverride?.title ?? tp.title,
-       completion = taskOverride?.completion ?? tp.completion,
-       description = taskOverride?.description ?? tp.description,
-       startTime = taskOverride?.startTime ?? startTime,
-       duration = taskOverride?.duration ?? tp.duration,
-       tags = taskOverride?.tags ?? tp.tags,
-       priority = taskOverride?.priority ?? tp.priority,
-       reminders = taskOverride?.reminders ?? tp.reminders,
-       subTasks =
-           taskOverride?.subTasks ??
-           tp.subTasks.map((name) => (name, false)).toList();
-
-  TaskInstance copyWith({
-    String? taskId,
+  TaskPattern copyWith({
+    String? id,
     String? title,
     Completion? completion,
     String? description,
     DateTime? startTime,
     Duration? duration,
+    RecurrenceRule? rrule,
     List<String>? tags,
     int? priority,
     List<NotiReminder>? reminders,
-    List<(String name, bool completed)>? subTasks,
+    List<String>? subTasks,
+    bool? deleted,
+    int? rev,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
-    return TaskInstance(
-      taskId: taskId ?? this.taskId,
+    return TaskPattern(
+      id: id ?? this.id,
       title: title ?? this.title,
       completion: completion ?? this.completion,
       description: description ?? this.description,
       startTime: startTime ?? this.startTime,
       duration: duration ?? this.duration,
+      rrule: rrule ?? this.rrule,
       tags: tags ?? this.tags,
       priority: priority ?? this.priority,
       reminders: reminders ?? this.reminders,
       subTasks: subTasks ?? this.subTasks,
+      deleted: deleted ?? this.deleted,
+      rev: rev ?? this.rev,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
-  TaskInstance.fromEntry(TaskInstanceEntry entry)
-    : taskId = entry.taskId,
+  TaskPattern.fromEntry(TaskPatternEntry entry)
+    : id = entry.id,
       title = entry.title,
       completion = Completion.fromJson(entry.completion)!,
       description = entry.description ?? '',
       startTime = entry.startTime,
       duration = entry.duration != null
           ? Duration(milliseconds: entry.duration!)
+          : null,
+      rrule = entry.rrule != null
+          ? RecurrenceRule.fromString(entry.rrule!)
           : null,
       tags = entry.tags != null && entry.tags!.isNotEmpty
           ? entry.tags!.split(';')
@@ -102,25 +108,34 @@ class TaskInstance {
                 .toList()
           : [],
       subTasks = entry.subTasks != null && entry.subTasks!.isNotEmpty
-          ? entry.subTasks!.split(';').map((e) {
-              final parts = e.split(',');
-              return (parts[0], parts[1].toLowerCase() == 'true');
-            }).toList()
-          : [];
+          ? entry.subTasks!.split(';')
+          : [],
+      deleted = entry.deleted,
+      rev = entry.rev,
+      createdAt = entry.createdAt,
+      updatedAt = entry.updatedAt;
 
-  TaskInstancesCompanion toCompanion() {
-    return TaskInstancesCompanion.insert(
-      taskId: taskId,
-      title: title,
+  TaskPatternsCompanion toCompanion() {
+    return TaskPatternsCompanion(
+      id: Value(id),
+      title: Value(title),
       completion: Value(completion.toJson()),
-      description: Value(description),
+      description: Value(description.isNotEmpty ? description : null),
       startTime: Value(startTime),
       duration: Value(duration?.inMilliseconds),
-      tags: Value(tags.join(';')),
+      rrule: Value(rrule?.toString()),
+      tags: Value(tags.isNotEmpty ? tags.join(';') : null),
       priority: Value(priority),
-      reminders: Value(reminders.map((e) => e.toJson()).join(';')),
-      subTasks: Value(subTasks.map((e) => "${e.$1},${e.$2}").join(';')),
-      deleted: Value(false),
+      reminders: Value(
+        reminders.isNotEmpty
+            ? reminders.map((e) => e.toJson()).join(';')
+            : null,
+      ),
+      subTasks: Value(subTasks.isNotEmpty ? subTasks.join(';') : null),
+      deleted: Value(deleted),
+      rev: Value(rev),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
     );
   }
 }
