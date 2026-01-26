@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:timecraft/model/drag_data.dart';
-import 'package:timecraft/week_calendar/view/task_tile.dart';
+import 'package:timecraft/pages/week_calendar/view/task_tile.dart';
 
 class GhostTile extends StatelessWidget {
   final String title;

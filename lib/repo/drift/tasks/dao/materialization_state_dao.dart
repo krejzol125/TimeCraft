@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:timecraft/repo/drift/local_db.dart';
-import 'package:timecraft/repo/drift/materialization_state.dart';
+import 'package:timecraft/repo/drift/tasks/materialization_state.dart';
 import 'package:timecraft/repo/drift/tasks/tables/materialization_state.dart';
 
 part 'materialization_state_dao.g.dart';

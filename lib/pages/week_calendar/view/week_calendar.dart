@@ -4,14 +4,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:timecraft/model/drag_data.dart';
 import 'package:timecraft/model/task_instance.dart';
-import 'package:timecraft/app_view/bloc/app_cubit.dart';
-import 'package:timecraft/week_calendar/view/ghost_tile.dart';
-import 'package:timecraft/week_calendar/view/task_tile.dart';
+import 'package:timecraft/pages/week_calendar/bloc/calendar_cubit.dart';
+import 'package:timecraft/pages/week_calendar/view/ghost_tile.dart';
+import 'package:timecraft/pages/week_calendar/view/task_tile.dart';
+import 'package:timecraft/repo/task_repo.dart';
 
 /// ================================================
 
-class Weekcalendar extends StatefulWidget {
-  Weekcalendar(this.tasks, {super.key});
+class WeekCalendar extends StatefulWidget {
+  WeekCalendar(this.tasks, this.weekStartDate, {super.key});
 
   // Wysokość 30 minut
   //final double halfHourHeight = 40.0;
@@ -33,16 +34,19 @@ class Weekcalendar extends StatefulWidget {
   // Minimalna długość zadania
   static const int minDurationMinutes = 10;
 
+  final DateTime weekStartDate;
+
   @override
-  State<Weekcalendar> createState() => _WeekcalendarState();
+  State<WeekCalendar> createState() => _WeekCalendarState();
 }
 
-class _WeekcalendarState extends State<Weekcalendar> {
-  _WeekcalendarState();
+class _WeekCalendarState extends State<WeekCalendar> {
+  _WeekCalendarState();
 
   @override
   void initState() {
     tasks = widget.tasks;
+    print('Initializing WeekCalendar with ${tasks.length} tasks');
     super.initState();
   }
 
@@ -66,72 +70,6 @@ class _WeekcalendarState extends State<Weekcalendar> {
 
   late List<TaskInstance> tasks = [];
 
-  // Prosty seed
-  // List<TaskInstance> tasks = [
-  //   TaskInstance(
-  //     id: 1,
-  //     title: "Design Meeting",
-  //     description: "Discuss UI/UX designs with the team.",
-  //     startTime: _thisWeekStart().add(const Duration(hours: 9)), // Pon 09:00
-  //     endTime: _thisWeekStart().add(const Duration(hours: 10)), // Pon 10:00
-  //   ),
-  //   TaskInstance(
-  //     id: 2,
-  //     title: "Code Review",
-  //     description: "Review code with the team.",
-  //     startTime: _thisWeekStart().add(
-  //       const Duration(hours: 14, days: 3),
-  //     ), // Czw 14:00
-  //     endTime: _thisWeekStart().add(
-  //       const Duration(hours: 16, days: 3),
-  //     ), // Czw 16:00
-  //   ),
-  //   TaskInstance(
-  //     id: 3,
-  //     title: "Meeting",
-  //     description: "Discuss project progress with the team.",
-  //     startTime: _thisWeekStart().add(
-  //       const Duration(hours: 10, days: 3),
-  //     ), // Czw 10:00
-  //     endTime: _thisWeekStart().add(
-  //       const Duration(hours: 11, days: 3),
-  //     ), // Czw 11:00
-  //   ),
-  //   TaskInstance(
-  //     id: 4,
-  //     title: "Meeting",
-  //     description: "Discuss project progress with the team.",
-  //     startTime: _thisWeekStart().add(
-  //       const Duration(hours: 12, days: 3),
-  //     ), // Czw 12:00
-  //     endTime: _thisWeekStart().add(
-  //       const Duration(hours: 13, days: 3),
-  //     ), // Czw 13:00
-  //   ),
-  //   TaskInstance(
-  //     id: 5,
-  //     title: "Meeting",
-  //     description: "Discuss project progress with the team.",
-  //     startTime: _thisWeekStart().add(
-  //       const Duration(hours: 14, days: 2),
-  //     ), // sr 14:00
-  //     endTime: _thisWeekStart().add(
-  //       const Duration(hours: 15, days: 2),
-  //     ), // sr 15:00
-  //   ),
-  //   TaskInstance(
-  //     id: 6,
-  //     title: "Meeting",
-  //     description: "Discuss project progress with the team.",
-  //     startTime: _thisWeekStart().add(
-  //       const Duration(hours: 16, days: 1),
-  //     ), // wt 16:00
-  //     endTime: _thisWeekStart().add(
-  //       const Duration(hours: 17, days: 1),
-  //     ), // wt 17:00
-  //   ),
-  // ];
-
   // Ghost (cień) – aktualizowany na żywo podczas drag
   String? _ghostDay;
   DateTime? _ghostStart;
@@ -145,7 +83,7 @@ class _WeekcalendarState extends State<Weekcalendar> {
     return DateTime(monday.year, monday.month, monday.day);
   }
 
-  DateTime get weekStartDate => _thisWeekStart();
+  DateTime get weekStartDate => widget.weekStartDate;
 
   late final Map<String, DateTime> weekStartDates = {
     'Mon': weekStartDate,
@@ -177,7 +115,7 @@ class _WeekcalendarState extends State<Weekcalendar> {
   DateTime _snapTo5(DateTime dt) {
     final total = dt.hour * 60 + dt.minute;
     final snapped =
-        (total / Weekcalendar.snapMinutes).round() * Weekcalendar.snapMinutes;
+        (total / WeekCalendar.snapMinutes).round() * WeekCalendar.snapMinutes;
     final h = snapped ~/ 60;
     final m = snapped % 60;
     return DateTime(dt.year, dt.month, dt.day, h, m);
@@ -200,7 +138,7 @@ class _WeekcalendarState extends State<Weekcalendar> {
   void _updateTaskEnd(TaskInstance t, DateTime newEnd) {
     // Minimalna długość
     final minEnd = t.startTime!.add(
-      const Duration(minutes: Weekcalendar.minDurationMinutes),
+      const Duration(minutes: WeekCalendar.minDurationMinutes),
     );
     final safeEnd = newEnd.isAfter(minEnd) ? newEnd : minEnd;
     setState(() {
@@ -380,8 +318,8 @@ class _WeekcalendarState extends State<Weekcalendar> {
       (widget.halfHoursPerDay * 30).toDouble(),
     );
     final minutesRounded =
-        (minutesFromTop / Weekcalendar.snapMinutes).round() *
-        Weekcalendar.snapMinutes;
+        (minutesFromTop / WeekCalendar.snapMinutes).round() *
+        WeekCalendar.snapMinutes;
 
     final dayStart = weekStartDates[day]!;
     final columnBase = DateTime(dayStart.year, dayStart.month, dayStart.day);
@@ -414,7 +352,7 @@ class _WeekcalendarState extends State<Weekcalendar> {
       DateTime end = snapped.isAfter(ghostStart)
           ? snapped
           : ghostStart.add(
-              const Duration(minutes: Weekcalendar.minDurationMinutes),
+              const Duration(minutes: WeekCalendar.minDurationMinutes),
             );
       end = _snapTo5(end);
 
@@ -422,7 +360,7 @@ class _WeekcalendarState extends State<Weekcalendar> {
       final dayEnd = columnBase.add(const Duration(hours: 24));
       if (!end.isBefore(dayEnd))
         end = dayEnd.subtract(
-          const Duration(minutes: Weekcalendar.snapMinutes),
+          const Duration(minutes: WeekCalendar.snapMinutes),
         );
 
       ghostHeight = _dateToHeight(ghostStart, end);
@@ -491,14 +429,16 @@ class _WeekcalendarState extends State<Weekcalendar> {
               );
               // Bezpieczny minimalny czas + snap
               final minEnd = start.add(
-                const Duration(minutes: Weekcalendar.minDurationMinutes),
+                const Duration(minutes: WeekCalendar.minDurationMinutes),
               );
               if (!end.isAfter(minEnd)) end = minEnd;
               end = _snapTo5(end);
               _updateTaskEnd(data.task, end);
             }
-            context.read<AppCubit>().updateTask(
-              tasks.where((t) => t.taskId == data.task.taskId).first,
+            context.read<TaskRepo>().scheduleTask(
+              data.task.taskId,
+              _ghostStart!,
+              Duration(minutes: (_ghostHeight! / _pixelsPerMinute).round()),
             );
             _clearGhost();
           },

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:timecraft/model/task_instance.dart';
-import 'package:timecraft/undated_drawer/view/undated_task_draggable_tile.dart';
+import 'package:timecraft/pages/undated_drawer/view/undated_task_draggable_tile.dart';
 
 class UndatedDrawer extends StatelessWidget {
   const UndatedDrawer({required this.undated, required this.onDragStartClose});

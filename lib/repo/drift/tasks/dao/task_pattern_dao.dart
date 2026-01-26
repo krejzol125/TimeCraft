@@ -18,6 +18,7 @@ class TaskPatternDao extends DatabaseAccessor<LocalDB>
     return TaskPattern.fromEntry(row);
   }
 
+  /// to manualy mark pattern as dirty for materialization
   Future<void> markPatternDirty(String patternId, int rev) async {
     await (update(taskPatterns)..where((tbl) => tbl.id.equals(patternId)))
         .write(TaskPatternsCompanion(rev: Value(rev)));

@@ -18,6 +18,8 @@ class TaskRepo {
       _taskPatternDao = TaskPatternDao(db),
       _taskOverrideDao = TaskOverrideDao(db);
 
+  // ! Streams
+
   Stream<List<TaskInstance>> watchTasksInWindow(DateTime from, DateTime to) {
     var stream = _taskInstanceDao.watchTasksInRange(from, to);
     _materializationWorker.enzureRange(from, to);
@@ -28,11 +30,19 @@ class TaskRepo {
     return _taskInstanceDao.watchUnscheduledTasks();
   }
 
+  // ! Create
+
   Future<void> createPattern(TaskPattern tp) async {
     await _taskPatternDao.upsertPattern(
       tp.copyWith(rev: DateTime.now().millisecondsSinceEpoch),
     );
   }
+
+  // Future<void> createOverride(TaskOverride to) async {
+  //   await _taskOverrideDao.upsertOverride(to);
+  // }
+
+  // ! Update
 
   Future<void> overrideTask(TaskOverride to) async {
     await _taskOverrideDao.upsertOverride(to);
@@ -42,7 +52,20 @@ class TaskRepo {
     );
   }
 
-  Future<void> createOverride(TaskOverride to) async {
-    await _taskOverrideDao.upsertOverride(to);
+  Future<void> scheduleTask(
+    String taskId,
+    DateTime startTime,
+    Duration duration,
+  ) async {
+    TaskPattern? pattern = await _taskPatternDao.getPatternById(taskId);
+    if (pattern == null) return;
+    _taskPatternDao.upsertPattern(
+      pattern.copyWith(
+        startTime: startTime,
+        duration: duration,
+        rev: DateTime.now().millisecondsSinceEpoch,
+        updatedAt: DateTime.now(),
+      ),
+    );
   }
 }

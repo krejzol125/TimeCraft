@@ -5,12 +5,13 @@ import 'package:timecraft/components/priority_field.dart';
 import 'package:timecraft/model/completion.dart';
 import 'package:timecraft/model/task_instance.dart';
 import 'package:timecraft/components/task_input_field.dart';
+import 'package:timecraft/model/task_pattern.dart';
 import 'package:timecraft/system_design/tc_button.dart';
 import 'package:timecraft/system_design/tc_fext_field.dart';
 
 class AddTaskSheet extends StatefulWidget {
   const AddTaskSheet({super.key, required this.onSubmit});
-  final void Function(TaskInstance task) onSubmit;
+  final void Function(TaskPattern task) onSubmit;
 
   @override
   State<AddTaskSheet> createState() => _AddTaskSheetState();
@@ -95,13 +96,10 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     final id = DateTime.now().millisecondsSinceEpoch;
     final tags = _tags.map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
 
-    final subTasks = _subtasks
-        .map<(String, bool)>((c) => (c.trim(), false))
-        .where((t) => t.$1.isNotEmpty)
-        .toList();
+    final subTasks = _subtasks.where((t) => t.isNotEmpty).toList();
 
-    final task = TaskInstance(
-      taskId: id.toString(),
+    final task = TaskPattern(
+      id: id.toString(),
       title: _title.trim(),
       completion: BinaryCompletion(false),
       description: _descCtrl.text.trim(),

@@ -4,7 +4,7 @@ import 'package:timecraft/model/task_instance.dart';
 import 'package:timecraft/model/task_override.dart';
 import 'package:timecraft/model/task_pattern.dart';
 import 'package:timecraft/repo/drift/local_db.dart';
-import 'package:timecraft/repo/drift/materialization_state.dart';
+import 'package:timecraft/repo/drift/tasks/materialization_state.dart';
 import 'package:timecraft/repo/drift/tasks/dao/materialization_state_dao.dart';
 import 'package:timecraft/repo/drift/tasks/dao/task_instance_dao.dart';
 import 'package:timecraft/repo/drift/tasks/dao/task_override_dao.dart';
@@ -103,9 +103,6 @@ class MaterializationWorker {
     List<TaskOverride> overrides = await _taskOverrideDao.getOverridesForTask(
       taskId,
     );
-    print(
-      'Rematerializing task $taskId with rev ${pattern.rev} and ${overrides.length} overrides',
-    );
     Map<String, TaskOverride> overrideMap = {
       for (var ovr in overrides) ovr.rid.toIso8601String(): ovr,
     };
@@ -121,6 +118,9 @@ class MaterializationWorker {
     if (!shouldRematerialize) {
       return;
     }
+    print(
+      'Rematerializing task ${pattern.title} with rev ${pattern.rev} and ${overrides.length} overrides',
+    );
 
     final newState = MaterializationState(
       taskId: taskId,
@@ -131,6 +131,9 @@ class MaterializationWorker {
     await _materializationStateDao.upsertState(newState);
 
     if (pattern.rrule == null) {
+      print(
+        'Materializing single instance for pattern ${pattern.title} with startTime ${pattern.startTime}',
+      );
       await _taskInstanceDao.replaceInstancesForPattern(taskId, [
         TaskInstance.fromPattern(
           pattern,
@@ -160,9 +163,12 @@ class MaterializationWorker {
           overrideMap[dt.copyWith(isUtc: false).toIso8601String()];
       if (override != null) {
         print(
-          'Applying override ${override.rid} for pattern $taskId at ${dt.copyWith(isUtc: false)}',
+          'Applying override ${override.rid} for pattern ${pattern.title} at ${dt.copyWith(isUtc: false)}',
         );
       }
+      print(
+        'Materializing instance for pattern ${pattern.title} at ${dt.copyWith(isUtc: false)}',
+      );
       return TaskInstance.fromPattern(
         pattern,
         dt.copyWith(isUtc: false),
