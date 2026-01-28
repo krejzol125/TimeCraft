@@ -1,18 +1,17 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:timecraft/components/scope_dialog.dart';
 import 'package:timecraft/model/drag_data.dart';
 import 'package:timecraft/model/task_instance.dart';
-import 'package:timecraft/pages/week_calendar/bloc/calendar_cubit.dart';
 import 'package:timecraft/pages/week_calendar/view/ghost_tile.dart';
 import 'package:timecraft/pages/week_calendar/view/task_tile.dart';
 import 'package:timecraft/repo/task_repo.dart';
 
-/// ================================================
-
 class WeekCalendar extends StatefulWidget {
-  WeekCalendar(this.tasks, this.weekStartDate, {super.key});
+  const WeekCalendar(this.tasks, this.weekStartDate, this.repo, {super.key});
+
+  final TaskRepo repo;
 
   final double baseHalfHourHeight = 40.0;
   final int halfHoursPerDay = 48;
@@ -25,7 +24,7 @@ class WeekCalendar extends StatefulWidget {
     'Sat',
     'Sun',
   ];
-  List<TaskInstance> tasks = [];
+  final List<TaskInstance> tasks;
 
   static const int snapMinutes = 1;
   static const int minDurationMinutes = 10;
@@ -41,17 +40,13 @@ class _WeekCalendarState extends State<WeekCalendar> {
 
   @override
   void initState() {
-    //tasks = widget.tasks;
-    print('Initializing WeekCalendar with ${widget.tasks.length} tasks');
     super.initState();
   }
 
   final double dayWidth = 100.0;
 
-  // Pionowy kontroler przewijania (dla auto-scrolla)
   final ScrollController _vScroll = ScrollController();
 
-  // Klucze kolumn – do przeliczania globalnych koordynatów na lokalne
   final Map<String, GlobalKey> dayKeys = {
     'Mon': GlobalKey(),
     'Tue': GlobalKey(),
@@ -63,21 +58,6 @@ class _WeekCalendarState extends State<WeekCalendar> {
   };
 
   final scrollKey = GlobalKey();
-
-  //late List<TaskInstance> tasks = [];
-
-  // Ghost (cień) – aktualizowany na żywo podczas drag
-  String? _ghostDay;
-  DateTime? _ghostStart;
-  double? _ghostHeight;
-  DragData? _ghostData; // zadanie + tryb (move/resize)
-
-  // Początek tygodnia (poniedziałek)
-  static DateTime _thisWeekStart() {
-    final now = DateTime.now();
-    final monday = now.subtract(Duration(days: now.weekday - 1));
-    return DateTime(monday.year, monday.month, monday.day);
-  }
 
   DateTime get weekStartDate => widget.weekStartDate;
 
@@ -96,10 +76,6 @@ class _WeekCalendarState extends State<WeekCalendar> {
       date1.month == date2.month &&
       date1.day == date2.day;
 
-  // Ile pikseli ma 1 minuta (na podstawie halfHourHeight)
-  //double get _pixelsPerMinute => _halfHourHeight / 30.0;
-
-  // Przeliczenia czasu na pozycję i wysokość
   double _dateToTopOffset(DateTime startTime) =>
       (startTime.hour * 60 + startTime.minute) * _pixelsPerMinute;
 
@@ -108,7 +84,7 @@ class _WeekCalendarState extends State<WeekCalendar> {
     return minutes * _pixelsPerMinute;
   }
 
-  DateTime _snapTo5(DateTime dt) {
+  DateTime _snapMinutes(DateTime dt) {
     final total = dt.hour * 60 + dt.minute;
     final snapped =
         (total / WeekCalendar.snapMinutes).round() * WeekCalendar.snapMinutes;
@@ -119,50 +95,17 @@ class _WeekCalendarState extends State<WeekCalendar> {
 
   static const Duration _defaultDuration = Duration(minutes: 60);
 
-  void _updateTaskTime(TaskInstance t, DateTime newStart) {
-    // jeśli zadanie nie ma czasu, przyjmij domyślną długość
-    final Duration dur = t.duration ?? _defaultDuration;
+  // ! Zoom
 
-    setState(() {
-      final idx = widget.tasks.indexWhere((x) => x.taskId == t.taskId);
-      if (idx != -1) {
-        widget.tasks[idx] = widget.tasks[idx].copyWith(
-          startTime: newStart,
-          duration: dur,
-        );
-      }
-    });
-  }
-
-  void _updateTaskEnd(TaskInstance t, DateTime newEnd) {
-    // Minimalna długość
-    final minEnd = t.startTime!.add(
-      const Duration(minutes: WeekCalendar.minDurationMinutes),
-    );
-    final safeEnd = newEnd.isAfter(minEnd) ? newEnd : minEnd;
-    setState(() {
-      final idx = widget.tasks.indexWhere((x) => x.taskId == t.taskId);
-      if (idx != -1) {
-        widget.tasks[idx] = widget.tasks[idx].copyWith(
-          duration: safeEnd.difference(t.startTime!),
-        );
-      }
-    });
-  }
-
-  // --- ZOOM ---
-  double _zoom = 1.0; // aktualny zoom
-  static const double _minZoom = 0.5; // 20 px / 30 min (przy base=40)
-  static const double _maxZoom = 3.0; // 120 px / 30 min
+  double _zoom = 1.0;
+  static const double _minZoom = 0.5;
+  static const double _maxZoom = 3.0;
   double get _halfHourHeight => widget.baseHalfHourHeight * _zoom;
   double get _pixelsPerMinute => _halfHourHeight / 30.0;
   final GlobalKey _viewportKey = GlobalKey();
 
-  // Do pinch-zoom
   double? _scaleStartZoom;
-  // Offset? _scaleStartFocalGlobal;
 
-  // --- ZOOM: stosowanie z kotwicą pod palcem/kursorem ---
   void _applyZoom(double targetZoom, {required Offset focalGlobal}) {
     final rb = scrollKey.currentContext?.findRenderObject() as RenderBox?;
     if (rb == null || !_vScroll.hasClients) {
@@ -173,22 +116,8 @@ class _WeekCalendarState extends State<WeekCalendar> {
     final newZoom = targetZoom.clamp(_minZoom, _maxZoom);
     if ((newZoom - _zoom).abs() < 0.0001) return;
 
-    // final viewportTopGlobal = rb.localToGlobal(Offset.zero).dy;
-    // final localY = (focalGlobal.dy - viewportTopGlobal).clamp(
-    //   0.0,
-    //   rb.size.height,
-    // );
-
     final localY = rb.globalToLocal(focalGlobal).dy;
 
-    // final newZoom = targetZoom.clamp(_minZoom, _maxZoom);
-    // if ((newZoom - _zoom).abs() < 0.0001) return;
-
-    // 1) lokalne Y w viewportcie
-    // final viewportTopGlobal = rb.localToGlobal(Offset.zero).dy;
-    //final localY = (focalGlobal.dy - viewportTopGlobal).clamp(0.0, rb.size.height);
-
-    // 2) przelicz offset bez czekania na klatkę
     final oldPPM = widget.baseHalfHourHeight * _zoom / 30.0;
     final newPPM = widget.baseHalfHourHeight * newZoom / 30.0;
 
@@ -197,41 +126,33 @@ class _WeekCalendarState extends State<WeekCalendar> {
     final contentYAfter = minutesAtFocal * newPPM;
     final wantedOffset = contentYAfter - localY;
 
-    // 3) zastosuj atomowo
     setState(() => _zoom = newZoom);
 
     final minScroll = _vScroll.position.minScrollExtent;
     final maxScroll = _vScroll.position.maxScrollExtent;
-    //print('minutes at focal: $minutesAtFocal');
-    //print('offset before: ${_vScroll.offset}, wanted: $wantedOffset');
     WidgetsBinding.instance.scheduleFrameCallback((_) {
       if (!_vScroll.hasClients) return;
       _vScroll.jumpTo(wantedOffset.clamp(minScroll, maxScroll));
     });
   }
 
-  // --- PINCH (uszczypnięcie dwoma palcami) ---
   void _onScaleStart(ScaleStartDetails d) {
     _scaleStartZoom = _zoom;
-    // _scaleStartFocalGlobal = d.focalPoint;
   }
 
   void _onScaleUpdate(ScaleUpdateDetails d) {
-    // Pinch: używamy tylko skali (ignorujemy przesunięcia)
     final base = _scaleStartZoom ?? _zoom;
-    final focal = d.focalPoint; // aktualna pozycja palców
+    final focal = d.focalPoint;
     _applyZoom(base * d.scale, focalGlobal: focal);
   }
 
   void _onScaleEnd(ScaleEndDetails d) {
     _scaleStartZoom = null;
-    // _scaleStartFocalGlobal = null;
   }
 
-  int _lastZoomUpdateTs = 0; // microseconds
-  static const int _zoomUpdateIntervalUs = 16 * 1000; // ~60 FPS
+  int _lastZoomUpdateTs = 0;
+  static const int _zoomUpdateIntervalUs = 16 * 1000;
 
-  // --- ZOOM kółkiem z CTRL ---
   void _onPointerSignal(PointerSignalEvent e) {
     if (e is! PointerScrollEvent) return;
 
@@ -244,36 +165,22 @@ class _WeekCalendarState extends State<WeekCalendar> {
       final now = DateTime.now().microsecondsSinceEpoch;
       if (now - _lastZoomUpdateTs < _zoomUpdateIntervalUs) return;
       _lastZoomUpdateTs = now;
-      // delta.dy < 0 → zoom in
-      final factor = 1.0 + (-e.scrollDelta.dy) * 0.0015; // czułość
+      final factor = 1.0 + (-e.scrollDelta.dy) * 0.0015;
       final target = (_zoom * factor).clamp(_minZoom, _maxZoom);
       _applyZoom(target, focalGlobal: e.position);
-    } else {
-      // zwykłe przewijanie
-      // if (!_vScroll.hasClients) return;
-      // final minScroll = _vScroll.position.minScrollExtent;
-      // final maxScroll = _vScroll.position.maxScrollExtent;
-      // final next = (_vScroll.offset + e.scrollDelta.dy).clamp(
-      //   minScroll,
-      //   maxScroll,
-      // );
-      // _vScroll.jumpTo(next);
     }
   }
 
-  // Auto-scroll gdy kursor blisko krawędzi widoku
   void _maybeAutoscroll(double localDyInColumn) {
-    const double edge = 40.0; // strefa wyzwalająca auto-scroll
-    const double step = 12.0; // krok scrolla
+    const double edge = 40.0;
+    const double step = 12.0;
 
-    // Top/bottom granice wewnątrz scrolla
     if (!_vScroll.hasClients) return;
 
     final maxScroll = _vScroll.position.maxScrollExtent;
     final minScroll = _vScroll.position.minScrollExtent;
     final current = _vScroll.offset;
 
-    // Column height jest zwykle równe pełnej zawartości (duże), ale nas interesuje pozycja kursora wewnątrz kolumny (local.dy)
     if (localDyInColumn < edge && current > minScroll) {
       //print('localDyInColumn: $localDyInColumn, scrolling UP');
       final to = (current - step).clamp(minScroll, maxScroll);
@@ -288,16 +195,18 @@ class _WeekCalendarState extends State<WeekCalendar> {
     }
   }
 
-  // Aktualizacja ghosta zależna od trybu
+  // ! Ghost
+  String? _ghostDay;
+  DateTime? _ghostStart;
+  double? _ghostHeight;
+  DragData? _ghostData;
+
   void _updateGhost(String day, DragData data, Offset globalOffset) {
     final key = dayKeys[day]!;
     final renderBox = key.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
 
     final local = renderBox.globalToLocal(globalOffset);
-    // final localForAutoScroll = renderBox.globalToLocal(
-    //   globalOffset - Offset(0, _vScroll.offset),
-    // );
     _maybeAutoscroll(
       local.dy -
           _vScroll.offset +
@@ -309,9 +218,7 @@ class _WeekCalendarState extends State<WeekCalendar> {
                           2)),
     );
 
-    // Minuty od góry kolumny (ciągłe)
     double minutesFromTop = (local.dy / _pixelsPerMinute);
-    // Clamp do zakresu dnia
     minutesFromTop = minutesFromTop.clamp(
       0,
       (widget.halfHoursPerDay * 30).toDouble(),
@@ -328,15 +235,12 @@ class _WeekCalendarState extends State<WeekCalendar> {
     double ghostHeight;
 
     if (data.mode == DragMode.move) {
-      // Przenoszenie: start = snapped, wysokość zachowana
-      //final duration = data.task.endTime!.difference(data.task.startTime!);
       final Duration dur = data.task.duration ?? _defaultDuration;
       final end = snapped.add(dur);
 
-      ghostStart = _snapTo5(snapped);
+      ghostStart = _snapMinutes(snapped);
       ghostHeight = _dateToHeight(ghostStart, end);
     } else {
-      // Rozciąganie: dozwolone tylko w tym samym dniu co start taska
       final taskDay = DateTime(
         data.task.startTime!.year,
         data.task.startTime!.month,
@@ -344,7 +248,6 @@ class _WeekCalendarState extends State<WeekCalendar> {
       );
       final isSameColumnDay = isSameDay(taskDay, dayStart);
       if (!isSameColumnDay) {
-        // ignoruj ruch w innych kolumnach przy resize
         return;
       }
       ghostStart = data.task.startTime!;
@@ -353,9 +256,8 @@ class _WeekCalendarState extends State<WeekCalendar> {
           : ghostStart.add(
               const Duration(minutes: WeekCalendar.minDurationMinutes),
             );
-      end = _snapTo5(end);
+      end = _snapMinutes(end);
 
-      // Bez wychodzenia poza dzień (opcjonalne ograniczenie)
       final dayEnd = columnBase.add(const Duration(hours: 24));
       if (!end.isBefore(dayEnd))
         end = dayEnd.subtract(
@@ -374,17 +276,12 @@ class _WeekCalendarState extends State<WeekCalendar> {
   }
 
   void _clearGhost() {
-    if (_ghostDay != null ||
-        _ghostStart != null ||
-        _ghostHeight != null ||
-        _ghostData != null) {
-      setState(() {
-        _ghostDay = null;
-        _ghostStart = null;
-        _ghostHeight = null;
-        _ghostData = null;
-      });
-    }
+    setState(() {
+      _ghostDay = null;
+      _ghostStart = null;
+      _ghostHeight = null;
+      _ghostData = null;
+    });
   }
 
   Widget _buildDayColumn(String day) {
@@ -405,46 +302,74 @@ class _WeekCalendarState extends State<WeekCalendar> {
           border: Border(right: BorderSide(color: Colors.grey.shade300)),
         ),
         child: DragTarget<DragData>(
-          //onWillAccept: (t) => true,
           onMove: (details) {
             _updateGhost(day, details.data, details.offset);
           },
           onLeave: (data) {
-            // tylko czyść, jeśli ghost był z tego dnia
             if (_ghostDay == day) _clearGhost();
           },
-          onAcceptWithDetails: (details) {
-            if (_ghostData == null || _ghostStart == null) return;
-
+          onAcceptWithDetails: (details) async {
             final data = details.data;
-            if (data.mode == DragMode.move) {
-              // Zastosuj przeniesienie: start = ghostStart, end = start + stara długość
-              _updateTaskTime(data.task, _ghostStart!);
-            } else {
-              // Zastosuj rozciągnięcie (ten sam dzień co start)
-              final start = data.task.startTime!;
-              DateTime end = start.add(
-                Duration(minutes: (_ghostHeight! / _pixelsPerMinute).round()),
-              );
-              // Bezpieczny minimalny czas + snap
-              final minEnd = start.add(
-                const Duration(minutes: WeekCalendar.minDurationMinutes),
-              );
-              if (!end.isAfter(minEnd)) end = minEnd;
-              end = _snapTo5(end);
-              _updateTaskEnd(data.task, end);
-            }
-            context.read<TaskRepo>().scheduleTask(
-              data.task.taskId,
-              _ghostStart!,
-              Duration(minutes: (_ghostHeight! / _pixelsPerMinute).round()),
+            final inst = data.task;
+
+            final newStartUtc = _ghostStart!.toUtc();
+            final newDuration = Duration(
+              minutes: (_ghostHeight! / _pixelsPerMinute).round(),
             );
+
+            DateTime? oldStartUtc = inst.rid?.toUtc();
+
+            if (inst.isRepeating == false || oldStartUtc == null) {
+              await widget.repo.schedulePattern(
+                inst.taskId,
+                newStartUtc,
+                newDuration,
+              );
+              _clearGhost();
+              return;
+            }
+            final offset = newStartUtc.difference(oldStartUtc);
+
+            final scope = await showMoveScopeDialog(context);
+            if (scope == null) {
+              _clearGhost();
+              return;
+            }
+
+            switch (scope) {
+              case RecurrenceMoveScope.singleOccurrence:
+                await widget.repo.rescheduleOneInstancePattern(
+                  inst.taskId,
+                  inst.rid!,
+                  newStartUtc,
+                  newDuration,
+                );
+                break;
+
+              case RecurrenceMoveScope.thisAndFuture:
+                await widget.repo.rescheduleThisAndFuturePattern(
+                  inst.taskId,
+                  inst.rid!,
+                  offset,
+                  newDuration,
+                );
+                break;
+
+              case RecurrenceMoveScope.entireSeries:
+                await widget.repo.rescheduleAllPattern(
+                  inst.taskId,
+                  offset,
+                  newDuration,
+                  fromWeekday: inst.startTime?.weekday,
+                );
+                break;
+            }
             _clearGhost();
           },
+
           builder: (context, candidateItems, rejectedItems) {
             return Stack(
               children: [
-                // Siatka co 30 min
                 ...List.generate(
                   widget.halfHoursPerDay,
                   (i) => Positioned(
@@ -468,7 +393,6 @@ class _WeekCalendarState extends State<WeekCalendar> {
                   ),
                 ),
 
-                // Istniejące taski w tym dniu
                 ...widget.tasks
                     .where(
                       (e) =>
@@ -489,7 +413,6 @@ class _WeekCalendarState extends State<WeekCalendar> {
                       );
                     }),
 
-                // GHOST – pokazuj tylko w aktywnej kolumnie
                 if (_ghostDay == day &&
                     _ghostStart != null &&
                     _ghostHeight != null &&
@@ -498,9 +421,7 @@ class _WeekCalendarState extends State<WeekCalendar> {
                     top: _dateToTopOffset(
                       _ghostData!.mode == DragMode.move
                           ? _ghostStart!
-                          : _ghostData!
-                                .task
-                                .startTime!, // przy resize top = stały start
+                          : _ghostData!.task.startTime!,
                     ),
                     left: 2,
                     right: 2,
@@ -511,21 +432,17 @@ class _WeekCalendarState extends State<WeekCalendar> {
                         start: _ghostStart!,
                         end: () {
                           if (_ghostData!.mode == DragMode.move) {
-                            final dur = _ghostData!.task.startTime == null
-                                ? _defaultDuration
-                                : _ghostData!.task.endTime!.difference(
-                                    _ghostData!.task.startTime!,
-                                  );
+                            final dur =
+                                _ghostData!.task.duration ?? _defaultDuration;
                             return _ghostStart!.add(dur);
                           } else {
-                            // z wysokości ghosta → minuty → koniec
                             final minutes = (_ghostHeight! / _pixelsPerMinute)
                                 .round();
                             return _ghostData!.task.startTime!.add(
                               Duration(minutes: minutes),
                             );
                           }
-                        }(), // resize
+                        }(),
                         mode: _ghostData!.mode,
                       ),
                     ),
@@ -566,7 +483,6 @@ class _WeekCalendarState extends State<WeekCalendar> {
           ),
           child: Column(
             children: [
-              // Nagłówki dni
               Padding(
                 padding: const EdgeInsets.fromLTRB(60, 8, 0, 6),
                 child: Row(
@@ -604,17 +520,14 @@ class _WeekCalendarState extends State<WeekCalendar> {
                   }).toList(),
                 ),
               ),
-              // Oś czasu + kolumny
               Expanded(
                 key: scrollKey,
                 child: SingleChildScrollView(
-                  //physics: NeverScrollableScrollPhysics(),
                   key: _viewportKey,
                   controller: _vScroll,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Godziny po lewej
                       SizedBox(
                         width: 60,
                         child: Column(
@@ -644,7 +557,6 @@ class _WeekCalendarState extends State<WeekCalendar> {
                           ],
                         ),
                       ),
-                      // Kolumny dni
                       Expanded(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,

@@ -66,9 +66,9 @@ class _TileBody extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 2),
       padding: EdgeInsets.fromLTRB(
         10,
-        height > 50 ? 10 : 4,
+        height > 60 ? 10 : 4,
         10,
-        height > 50 ? 22 : 0,
+        height > 60 ? 22 : 0,
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
@@ -92,7 +92,7 @@ class _TileBody extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (height > 80) ...[
+          if (height > 90) ...[
             Align(
               alignment: Alignment.topRight,
               child: Container(
@@ -117,7 +117,7 @@ class _TileBody extends StatelessWidget {
             const SizedBox(height: 6),
           ],
 
-          if (height > 30)
+          if (height > 40)
             Text(
               task.title,
               maxLines: 1,
@@ -143,7 +143,7 @@ class _TileBody extends StatelessWidget {
               softWrap: true,
             ),
           ],
-          const Spacer(),
+          //const Spacer(),
         ],
       ),
     );

@@ -9,7 +9,7 @@ import 'package:timecraft/pages/app_view/view/main_view.dart';
 
 void main() async {
   // LocalDB db = LocalDB();
-  // await db.deleteDb();
+  // await db.clearAllTables();
   // await db.close();
   runApp(const MyApp());
 }

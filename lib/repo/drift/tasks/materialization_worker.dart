@@ -26,7 +26,7 @@ class MaterializationWorker {
   //StreamSubscription? _patternSub;
   //StreamSubscription? _overrideSub;
   Timer? _debounceTimer;
-  final Duration _debounceDuration = Duration(milliseconds: 300);
+  final Duration _debounceDuration = Duration(milliseconds: 100);
   final Set<String> _pending = {};
   bool _isProcessing = false;
 

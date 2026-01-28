@@ -39,17 +39,17 @@ class CalendarCubit extends Cubit<CalendarState> {
         );
   }
 
-  Future<void> onTaskDropped({
-    required String id,
-    required DateTime startUtc,
-    required Duration duration,
-  }) async {
-    try {
-      await repo.scheduleTask(id, startUtc, duration);
-    } catch (e) {
-      emit(state.copyWith(error: e.toString()));
-    }
-  }
+  // Future<void> onTaskDropped({
+  //   required String id,
+  //   required DateTime startUtc,
+  //   required Duration duration,
+  // }) async {
+  //   try {
+  //     await repo.scheduleAllPattern(id, startUtc, duration);
+  //   } catch (e) {
+  //     emit(state.copyWith(error: e.toString()));
+  //   }
+  // }
 
   @override
   Future<void> close() {

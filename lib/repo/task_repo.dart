@@ -53,19 +53,46 @@ class TaskRepo {
     );
   }
 
-  Future<void> scheduleTask(
+  Future<void> schedulePattern(
     String taskId,
     DateTime startTime,
     Duration duration,
   ) async {
     TaskPattern? pattern = await _taskPatternDao.getPatternById(taskId);
     if (pattern == null) return;
+    await _taskPatternDao.upsertPattern(
+      pattern.copyWith(
+        startTime: startTime,
+        duration: duration,
+        rev: DateTime.now().millisecondsSinceEpoch,
+        updatedAt: DateTime.now(),
+      ),
+    );
+  }
+
+  Future<void> rescheduleAllPattern(
+    String taskId,
+    Duration offset,
+    Duration duration, {
+    int? fromWeekday,
+  }) async {
+    TaskPattern? pattern = await _taskPatternDao.getPatternById(taskId);
+    if (pattern == null) return;
+    final startTime = pattern.startTime!.add(offset);
     if (pattern.rrule?.frequency == Frequency.weekly) {
-      print('updating weekly to ${startTime.weekday} from ${pattern.rrule}');
+      List<ByWeekDayEntry> days = pattern.rrule?.byWeekDays ?? [];
+      if (fromWeekday != null) {
+        days.removeWhere((element) => element.day == fromWeekday);
+        days.add(ByWeekDayEntry(startTime.weekday));
+      } else {
+        days = [];
+      }
+
       final rrule = pattern.rrule!.copyWith(
-        byWeekDays: [ByWeekDayEntry(startTime.weekday)],
+        byWeekDays: days,
+        until: pattern.rrule?.until?.add(offset),
       );
-      print('new rrule: $rrule');
+
       _taskPatternDao.upsertPattern(
         pattern.copyWith(
           startTime: startTime,
@@ -81,9 +108,64 @@ class TaskRepo {
       pattern.copyWith(
         startTime: startTime,
         duration: duration,
+        rrule: pattern.rrule!.copyWith(
+          until: pattern.rrule?.until?.add(offset),
+        ),
         rev: DateTime.now().millisecondsSinceEpoch,
         updatedAt: DateTime.now(),
       ),
     );
+  }
+
+  Future<void> rescheduleOneInstancePattern(
+    String taskId,
+    DateTime rid,
+    DateTime startTime,
+    Duration duration,
+  ) async {
+    TaskPattern? pattern = await _taskPatternDao.getPatternById(taskId);
+    if (pattern == null) return;
+    TaskOverride to = TaskOverride.fromPattern(
+      pattern,
+      rid,
+      startTime: startTime,
+      duration: duration,
+    );
+    await _taskOverrideDao.upsertOverride(to);
+    await _taskPatternDao.markPatternDirty(
+      taskId,
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  Future<void> rescheduleThisAndFuturePattern(
+    String taskId,
+    DateTime splitRid,
+    Duration offset,
+    Duration duration,
+  ) async {
+    TaskPattern? pattern = await _taskPatternDao.getPatternById(taskId);
+    if (pattern == null) return;
+    await _taskPatternDao.upsertPattern(
+      pattern.copyWith(
+        rrule: pattern.rrule?.copyWith(
+          until: pattern.rrule?.until != null
+              ? splitRid
+                    .subtract(const Duration(seconds: 1))
+                    .copyWith(isUtc: true)
+              : null,
+        ),
+        rev: DateTime.now().millisecondsSinceEpoch,
+        updatedAt: DateTime.now(),
+      ),
+    );
+    TaskPattern newPattern = pattern.copyWith(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      startTime: splitRid.add(offset),
+      duration: duration,
+      rev: DateTime.now().millisecondsSinceEpoch,
+      updatedAt: DateTime.now(),
+    );
+    await _taskPatternDao.upsertPattern(newPattern);
   }
 }

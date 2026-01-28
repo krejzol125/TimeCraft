@@ -47,7 +47,11 @@ class MainView extends StatelessWidget {
               );
             },
           ),
-          body: WeekCalendar(state.tasks, state.fromUtc),
+          body: WeekCalendar(
+            state.tasks,
+            state.fromUtc,
+            context.read<TaskRepo>(),
+          ),
           floatingActionButton: FloatingActionButton.extended(
             icon: const Icon(Icons.add),
             label: const Text('New Task'),
