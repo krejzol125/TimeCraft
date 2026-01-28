@@ -40,7 +40,13 @@ class LocalDB extends _$LocalDB {
   );
 
   static QueryExecutor _openConnection() {
-    return driftDatabase(name: 'local_database');
+    return driftDatabase(
+      name: 'app_database',
+      web: DriftWebOptions(
+        sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+        driftWorker: Uri.parse('drift_worker.dart.js'),
+      ),
+    );
   }
 
   Future<void> deleteDb() async => deleteDriftDatabaseFile('local_database');

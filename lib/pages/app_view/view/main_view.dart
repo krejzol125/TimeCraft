@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:timecraft/model/task_instance.dart';
+import 'package:timecraft/pages/add_task_sheet/view/add_task_multi_sheet.dart';
 import 'package:timecraft/pages/week_calendar/bloc/calendar_cubit.dart';
 import 'package:timecraft/pages/week_calendar/bloc/calendar_state.dart';
 import 'package:timecraft/pages/week_calendar/view/week_calendar.dart';
@@ -56,7 +57,7 @@ class MainView extends StatelessWidget {
                 isScrollControlled: true,
                 useSafeArea: true,
                 backgroundColor: Colors.transparent,
-                builder: (ctx) => AddTaskSheet(
+                builder: (ctx) => AddTaskSheetMultiStep(
                   onSubmit: context.read<TaskRepo>().createPattern,
                 ),
               );

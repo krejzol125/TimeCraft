@@ -963,11 +963,11 @@ class $TaskInstancesTable extends TaskInstances
   );
   static const VerificationMeta _ridMeta = const VerificationMeta('rid');
   @override
-  late final GeneratedColumn<String> rid = GeneratedColumn<String>(
+  late final GeneratedColumn<DateTime> rid = GeneratedColumn<DateTime>(
     'rid',
     aliasedName,
     true,
-    type: DriftSqlType.string,
+    type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
   static const VerificationMeta _titleMeta = const VerificationMeta('title');
@@ -1023,6 +1023,21 @@ class $TaskInstancesTable extends TaskInstances
     true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isRepeatingMeta = const VerificationMeta(
+    'isRepeating',
+  );
+  @override
+  late final GeneratedColumn<bool> isRepeating = GeneratedColumn<bool>(
+    'is_repeating',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_repeating" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
   );
   static const VerificationMeta _tagsMeta = const VerificationMeta('tags');
   @override
@@ -1115,6 +1130,7 @@ class $TaskInstancesTable extends TaskInstances
     description,
     startTime,
     duration,
+    isRepeating,
     tags,
     priority,
     reminders,
@@ -1184,6 +1200,15 @@ class $TaskInstancesTable extends TaskInstances
         duration.isAcceptableOrUnknown(data['duration']!, _durationMeta),
       );
     }
+    if (data.containsKey('is_repeating')) {
+      context.handle(
+        _isRepeatingMeta,
+        isRepeating.isAcceptableOrUnknown(
+          data['is_repeating']!,
+          _isRepeatingMeta,
+        ),
+      );
+    }
     if (data.containsKey('tags')) {
       context.handle(
         _tagsMeta,
@@ -1240,7 +1265,7 @@ class $TaskInstancesTable extends TaskInstances
         data['${effectivePrefix}task_id'],
       )!,
       rid: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
+        DriftSqlType.dateTime,
         data['${effectivePrefix}rid'],
       ),
       title: attachedDatabase.typeMapping.read(
@@ -1263,6 +1288,10 @@ class $TaskInstancesTable extends TaskInstances
         DriftSqlType.int,
         data['${effectivePrefix}duration'],
       ),
+      isRepeating: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_repeating'],
+      )!,
       tags: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}tags'],
@@ -1303,12 +1332,13 @@ class $TaskInstancesTable extends TaskInstances
 class TaskInstanceEntry extends DataClass
     implements Insertable<TaskInstanceEntry> {
   final String taskId;
-  final String? rid;
+  final DateTime? rid;
   final String title;
   final String completion;
   final String? description;
   final DateTime? startTime;
   final int? duration;
+  final bool isRepeating;
   final String? tags;
   final int priority;
   final String? reminders;
@@ -1324,6 +1354,7 @@ class TaskInstanceEntry extends DataClass
     this.description,
     this.startTime,
     this.duration,
+    required this.isRepeating,
     this.tags,
     required this.priority,
     this.reminders,
@@ -1337,7 +1368,7 @@ class TaskInstanceEntry extends DataClass
     final map = <String, Expression>{};
     map['task_id'] = Variable<String>(taskId);
     if (!nullToAbsent || rid != null) {
-      map['rid'] = Variable<String>(rid);
+      map['rid'] = Variable<DateTime>(rid);
     }
     map['title'] = Variable<String>(title);
     map['completion'] = Variable<String>(completion);
@@ -1350,6 +1381,7 @@ class TaskInstanceEntry extends DataClass
     if (!nullToAbsent || duration != null) {
       map['duration'] = Variable<int>(duration);
     }
+    map['is_repeating'] = Variable<bool>(isRepeating);
     if (!nullToAbsent || tags != null) {
       map['tags'] = Variable<String>(tags);
     }
@@ -1381,6 +1413,7 @@ class TaskInstanceEntry extends DataClass
       duration: duration == null && nullToAbsent
           ? const Value.absent()
           : Value(duration),
+      isRepeating: Value(isRepeating),
       tags: tags == null && nullToAbsent ? const Value.absent() : Value(tags),
       priority: Value(priority),
       reminders: reminders == null && nullToAbsent
@@ -1402,12 +1435,13 @@ class TaskInstanceEntry extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return TaskInstanceEntry(
       taskId: serializer.fromJson<String>(json['taskId']),
-      rid: serializer.fromJson<String?>(json['rid']),
+      rid: serializer.fromJson<DateTime?>(json['rid']),
       title: serializer.fromJson<String>(json['title']),
       completion: serializer.fromJson<String>(json['completion']),
       description: serializer.fromJson<String?>(json['description']),
       startTime: serializer.fromJson<DateTime?>(json['startTime']),
       duration: serializer.fromJson<int?>(json['duration']),
+      isRepeating: serializer.fromJson<bool>(json['isRepeating']),
       tags: serializer.fromJson<String?>(json['tags']),
       priority: serializer.fromJson<int>(json['priority']),
       reminders: serializer.fromJson<String?>(json['reminders']),
@@ -1422,12 +1456,13 @@ class TaskInstanceEntry extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'taskId': serializer.toJson<String>(taskId),
-      'rid': serializer.toJson<String?>(rid),
+      'rid': serializer.toJson<DateTime?>(rid),
       'title': serializer.toJson<String>(title),
       'completion': serializer.toJson<String>(completion),
       'description': serializer.toJson<String?>(description),
       'startTime': serializer.toJson<DateTime?>(startTime),
       'duration': serializer.toJson<int?>(duration),
+      'isRepeating': serializer.toJson<bool>(isRepeating),
       'tags': serializer.toJson<String?>(tags),
       'priority': serializer.toJson<int>(priority),
       'reminders': serializer.toJson<String?>(reminders),
@@ -1440,12 +1475,13 @@ class TaskInstanceEntry extends DataClass
 
   TaskInstanceEntry copyWith({
     String? taskId,
-    Value<String?> rid = const Value.absent(),
+    Value<DateTime?> rid = const Value.absent(),
     String? title,
     String? completion,
     Value<String?> description = const Value.absent(),
     Value<DateTime?> startTime = const Value.absent(),
     Value<int?> duration = const Value.absent(),
+    bool? isRepeating,
     Value<String?> tags = const Value.absent(),
     int? priority,
     Value<String?> reminders = const Value.absent(),
@@ -1461,6 +1497,7 @@ class TaskInstanceEntry extends DataClass
     description: description.present ? description.value : this.description,
     startTime: startTime.present ? startTime.value : this.startTime,
     duration: duration.present ? duration.value : this.duration,
+    isRepeating: isRepeating ?? this.isRepeating,
     tags: tags.present ? tags.value : this.tags,
     priority: priority ?? this.priority,
     reminders: reminders.present ? reminders.value : this.reminders,
@@ -1482,6 +1519,9 @@ class TaskInstanceEntry extends DataClass
           : this.description,
       startTime: data.startTime.present ? data.startTime.value : this.startTime,
       duration: data.duration.present ? data.duration.value : this.duration,
+      isRepeating: data.isRepeating.present
+          ? data.isRepeating.value
+          : this.isRepeating,
       tags: data.tags.present ? data.tags.value : this.tags,
       priority: data.priority.present ? data.priority.value : this.priority,
       reminders: data.reminders.present ? data.reminders.value : this.reminders,
@@ -1502,6 +1542,7 @@ class TaskInstanceEntry extends DataClass
           ..write('description: $description, ')
           ..write('startTime: $startTime, ')
           ..write('duration: $duration, ')
+          ..write('isRepeating: $isRepeating, ')
           ..write('tags: $tags, ')
           ..write('priority: $priority, ')
           ..write('reminders: $reminders, ')
@@ -1522,6 +1563,7 @@ class TaskInstanceEntry extends DataClass
     description,
     startTime,
     duration,
+    isRepeating,
     tags,
     priority,
     reminders,
@@ -1541,6 +1583,7 @@ class TaskInstanceEntry extends DataClass
           other.description == this.description &&
           other.startTime == this.startTime &&
           other.duration == this.duration &&
+          other.isRepeating == this.isRepeating &&
           other.tags == this.tags &&
           other.priority == this.priority &&
           other.reminders == this.reminders &&
@@ -1552,12 +1595,13 @@ class TaskInstanceEntry extends DataClass
 
 class TaskInstancesCompanion extends UpdateCompanion<TaskInstanceEntry> {
   final Value<String> taskId;
-  final Value<String?> rid;
+  final Value<DateTime?> rid;
   final Value<String> title;
   final Value<String> completion;
   final Value<String?> description;
   final Value<DateTime?> startTime;
   final Value<int?> duration;
+  final Value<bool> isRepeating;
   final Value<String?> tags;
   final Value<int> priority;
   final Value<String?> reminders;
@@ -1574,6 +1618,7 @@ class TaskInstancesCompanion extends UpdateCompanion<TaskInstanceEntry> {
     this.description = const Value.absent(),
     this.startTime = const Value.absent(),
     this.duration = const Value.absent(),
+    this.isRepeating = const Value.absent(),
     this.tags = const Value.absent(),
     this.priority = const Value.absent(),
     this.reminders = const Value.absent(),
@@ -1591,6 +1636,7 @@ class TaskInstancesCompanion extends UpdateCompanion<TaskInstanceEntry> {
     this.description = const Value.absent(),
     this.startTime = const Value.absent(),
     this.duration = const Value.absent(),
+    this.isRepeating = const Value.absent(),
     this.tags = const Value.absent(),
     this.priority = const Value.absent(),
     this.reminders = const Value.absent(),
@@ -1603,12 +1649,13 @@ class TaskInstancesCompanion extends UpdateCompanion<TaskInstanceEntry> {
        title = Value(title);
   static Insertable<TaskInstanceEntry> custom({
     Expression<String>? taskId,
-    Expression<String>? rid,
+    Expression<DateTime>? rid,
     Expression<String>? title,
     Expression<String>? completion,
     Expression<String>? description,
     Expression<DateTime>? startTime,
     Expression<int>? duration,
+    Expression<bool>? isRepeating,
     Expression<String>? tags,
     Expression<int>? priority,
     Expression<String>? reminders,
@@ -1626,6 +1673,7 @@ class TaskInstancesCompanion extends UpdateCompanion<TaskInstanceEntry> {
       if (description != null) 'description': description,
       if (startTime != null) 'start_time': startTime,
       if (duration != null) 'duration': duration,
+      if (isRepeating != null) 'is_repeating': isRepeating,
       if (tags != null) 'tags': tags,
       if (priority != null) 'priority': priority,
       if (reminders != null) 'reminders': reminders,
@@ -1639,12 +1687,13 @@ class TaskInstancesCompanion extends UpdateCompanion<TaskInstanceEntry> {
 
   TaskInstancesCompanion copyWith({
     Value<String>? taskId,
-    Value<String?>? rid,
+    Value<DateTime?>? rid,
     Value<String>? title,
     Value<String>? completion,
     Value<String?>? description,
     Value<DateTime?>? startTime,
     Value<int?>? duration,
+    Value<bool>? isRepeating,
     Value<String?>? tags,
     Value<int>? priority,
     Value<String?>? reminders,
@@ -1662,6 +1711,7 @@ class TaskInstancesCompanion extends UpdateCompanion<TaskInstanceEntry> {
       description: description ?? this.description,
       startTime: startTime ?? this.startTime,
       duration: duration ?? this.duration,
+      isRepeating: isRepeating ?? this.isRepeating,
       tags: tags ?? this.tags,
       priority: priority ?? this.priority,
       reminders: reminders ?? this.reminders,
@@ -1680,7 +1730,7 @@ class TaskInstancesCompanion extends UpdateCompanion<TaskInstanceEntry> {
       map['task_id'] = Variable<String>(taskId.value);
     }
     if (rid.present) {
-      map['rid'] = Variable<String>(rid.value);
+      map['rid'] = Variable<DateTime>(rid.value);
     }
     if (title.present) {
       map['title'] = Variable<String>(title.value);
@@ -1696,6 +1746,9 @@ class TaskInstancesCompanion extends UpdateCompanion<TaskInstanceEntry> {
     }
     if (duration.present) {
       map['duration'] = Variable<int>(duration.value);
+    }
+    if (isRepeating.present) {
+      map['is_repeating'] = Variable<bool>(isRepeating.value);
     }
     if (tags.present) {
       map['tags'] = Variable<String>(tags.value);
@@ -1734,6 +1787,7 @@ class TaskInstancesCompanion extends UpdateCompanion<TaskInstanceEntry> {
           ..write('description: $description, ')
           ..write('startTime: $startTime, ')
           ..write('duration: $duration, ')
+          ..write('isRepeating: $isRepeating, ')
           ..write('tags: $tags, ')
           ..write('priority: $priority, ')
           ..write('reminders: $reminders, ')
@@ -3598,12 +3652,13 @@ typedef $$TaskPatternsTableProcessedTableManager =
 typedef $$TaskInstancesTableCreateCompanionBuilder =
     TaskInstancesCompanion Function({
       required String taskId,
-      Value<String?> rid,
+      Value<DateTime?> rid,
       required String title,
       Value<String> completion,
       Value<String?> description,
       Value<DateTime?> startTime,
       Value<int?> duration,
+      Value<bool> isRepeating,
       Value<String?> tags,
       Value<int> priority,
       Value<String?> reminders,
@@ -3616,12 +3671,13 @@ typedef $$TaskInstancesTableCreateCompanionBuilder =
 typedef $$TaskInstancesTableUpdateCompanionBuilder =
     TaskInstancesCompanion Function({
       Value<String> taskId,
-      Value<String?> rid,
+      Value<DateTime?> rid,
       Value<String> title,
       Value<String> completion,
       Value<String?> description,
       Value<DateTime?> startTime,
       Value<int?> duration,
+      Value<bool> isRepeating,
       Value<String?> tags,
       Value<int> priority,
       Value<String?> reminders,
@@ -3669,7 +3725,7 @@ class $$TaskInstancesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get rid => $composableBuilder(
+  ColumnFilters<DateTime> get rid => $composableBuilder(
     column: $table.rid,
     builder: (column) => ColumnFilters(column),
   );
@@ -3696,6 +3752,11 @@ class $$TaskInstancesTableFilterComposer
 
   ColumnFilters<int> get duration => $composableBuilder(
     column: $table.duration,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isRepeating => $composableBuilder(
+    column: $table.isRepeating,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3767,7 +3828,7 @@ class $$TaskInstancesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get rid => $composableBuilder(
+  ColumnOrderings<DateTime> get rid => $composableBuilder(
     column: $table.rid,
     builder: (column) => ColumnOrderings(column),
   );
@@ -3794,6 +3855,11 @@ class $$TaskInstancesTableOrderingComposer
 
   ColumnOrderings<int> get duration => $composableBuilder(
     column: $table.duration,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isRepeating => $composableBuilder(
+    column: $table.isRepeating,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -3865,7 +3931,7 @@ class $$TaskInstancesTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get rid =>
+  GeneratedColumn<DateTime> get rid =>
       $composableBuilder(column: $table.rid, builder: (column) => column);
 
   GeneratedColumn<String> get title =>
@@ -3886,6 +3952,11 @@ class $$TaskInstancesTableAnnotationComposer
 
   GeneratedColumn<int> get duration =>
       $composableBuilder(column: $table.duration, builder: (column) => column);
+
+  GeneratedColumn<bool> get isRepeating => $composableBuilder(
+    column: $table.isRepeating,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get tags =>
       $composableBuilder(column: $table.tags, builder: (column) => column);
@@ -3961,12 +4032,13 @@ class $$TaskInstancesTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> taskId = const Value.absent(),
-                Value<String?> rid = const Value.absent(),
+                Value<DateTime?> rid = const Value.absent(),
                 Value<String> title = const Value.absent(),
                 Value<String> completion = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<DateTime?> startTime = const Value.absent(),
                 Value<int?> duration = const Value.absent(),
+                Value<bool> isRepeating = const Value.absent(),
                 Value<String?> tags = const Value.absent(),
                 Value<int> priority = const Value.absent(),
                 Value<String?> reminders = const Value.absent(),
@@ -3983,6 +4055,7 @@ class $$TaskInstancesTableTableManager
                 description: description,
                 startTime: startTime,
                 duration: duration,
+                isRepeating: isRepeating,
                 tags: tags,
                 priority: priority,
                 reminders: reminders,
@@ -3995,12 +4068,13 @@ class $$TaskInstancesTableTableManager
           createCompanionCallback:
               ({
                 required String taskId,
-                Value<String?> rid = const Value.absent(),
+                Value<DateTime?> rid = const Value.absent(),
                 required String title,
                 Value<String> completion = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<DateTime?> startTime = const Value.absent(),
                 Value<int?> duration = const Value.absent(),
+                Value<bool> isRepeating = const Value.absent(),
                 Value<String?> tags = const Value.absent(),
                 Value<int> priority = const Value.absent(),
                 Value<String?> reminders = const Value.absent(),
@@ -4017,6 +4091,7 @@ class $$TaskInstancesTableTableManager
                 description: description,
                 startTime: startTime,
                 duration: duration,
+                isRepeating: isRepeating,
                 tags: tags,
                 priority: priority,
                 reminders: reminders,

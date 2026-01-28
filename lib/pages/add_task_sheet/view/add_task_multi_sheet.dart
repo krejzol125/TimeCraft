@@ -1,0 +1,658 @@
+import 'package:flutter/material.dart';
+import 'package:rrule/rrule.dart';
+import 'package:timecraft/components/add_subtasks_field.dart';
+import 'package:timecraft/components/date_time_field.dart';
+import 'package:timecraft/components/priority_field.dart';
+import 'package:timecraft/components/rrule_picker.dart';
+import 'package:timecraft/components/task_input_field.dart';
+import 'package:timecraft/model/completion.dart';
+import 'package:timecraft/model/task_pattern.dart';
+import 'package:timecraft/system_design/tc_button.dart';
+import 'package:timecraft/system_design/tc_fext_field.dart';
+import 'package:timecraft/system_design/tc_input_decorator.dart';
+import 'package:timecraft/system_design/tc_radio_button.dart';
+
+class AddTaskSheetMultiStep extends StatefulWidget {
+  const AddTaskSheetMultiStep({
+    super.key,
+    required this.onSubmit,
+    this.initialStart,
+    this.initialEnd,
+  });
+
+  final void Function(TaskPattern result) onSubmit;
+
+  final DateTime? initialStart;
+  final DateTime? initialEnd;
+
+  @override
+  State<AddTaskSheetMultiStep> createState() => _AddTaskSheetMultiStepState();
+}
+
+class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
+  int _step = 0;
+
+  String _raw = '';
+  String _title = '';
+  List<String> _tags = [];
+
+  final TextEditingController _descCtrl = TextEditingController();
+
+  int _priority = 3;
+
+  final List<String> _subtasks = [];
+
+  DateTime? _startLocal;
+  DateTime? _endLocal;
+
+  bool repeating = false;
+
+  RecurrenceRule? _rrule;
+
+  _CompletionMode _completionMode = _CompletionMode.binary;
+  bool _binaryDone = false;
+
+  final _targetCtrl = TextEditingController(text: '10');
+  final _unitCtrl = TextEditingController(text: 'pages');
+
+  @override
+  void initState() {
+    super.initState();
+    _startLocal = widget.initialStart;
+    _endLocal = widget.initialEnd;
+  }
+
+  @override
+  void dispose() {
+    _descCtrl.dispose();
+    _targetCtrl.dispose();
+    _unitCtrl.dispose();
+    super.dispose();
+  }
+
+  bool _validateStep(int step) {
+    if (step == 0) {
+      if (_title.isEmpty) {
+        _toast('Podaj tytuł.');
+        return false;
+      }
+      return true;
+    }
+    if (step == 1) {
+      if (_startLocal != null &&
+          _endLocal != null &&
+          !_endLocal!.isAfter(_startLocal!)) {
+        _toast('Koniec musi być po początku.');
+        return false;
+      }
+      return true;
+    }
+    return true;
+  }
+
+  void _toast(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  void _next() {
+    if (!_validateStep(_step)) return;
+    if (_step < 2) setState(() => _step++);
+  }
+
+  void _back() {
+    if (_step > 0) setState(() => _step--);
+  }
+
+  Completion _buildCompletion() {
+    if (_completionMode == _CompletionMode.binary) {
+      return BinaryCompletion(false);
+    } else if (_completionMode == _CompletionMode.quantitative) {
+      final target = int.tryParse(_targetCtrl.text.trim()) ?? 10;
+      return QuantityCompletion(target, 0);
+    }
+    return BinaryCompletion(false);
+  }
+
+  void _submit() {
+    if (!_validateStep(0) || !_validateStep(1) || !_validateStep(2)) return;
+
+    final completion = _buildCompletion();
+
+    final id = DateTime.now().millisecondsSinceEpoch;
+
+    final task = TaskPattern(
+      id: id.toString(),
+      title: _title,
+      completion: completion,
+      description: _descCtrl.text.trim(),
+      startTime: _startLocal,
+      duration: _startLocal != null && _endLocal != null
+          ? _endLocal!.difference(_startLocal!)
+          : null,
+      rrule: repeating ? _rrule : null,
+      tags: _tags,
+      priority: _priority,
+      reminders: const [],
+      subTasks: List.of(_subtasks),
+    );
+
+    widget.onSubmit(task);
+    Navigator.of(context).maybePop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final viewInsets = MediaQuery.of(context).viewInsets;
+
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 200),
+      padding: EdgeInsets.only(bottom: viewInsets.bottom),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Create Task',
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).maybePop(),
+                      icon: const Icon(Icons.close, color: Colors.black),
+                      splashRadius: 22,
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 10),
+
+                _StepHeader(step: _step),
+
+                const SizedBox(height: 12),
+
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeOut,
+                  switchOutCurve: Curves.easeIn,
+                  child: _buildStepBody(_step),
+                ),
+
+                const SizedBox(height: 16),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: TcButton(
+                        outlined: true,
+                        onTap: _step == 0
+                            ? () => Navigator.of(context).maybePop()
+                            : _back,
+                        child: Text(
+                          _step == 0 ? 'Cancel' : 'Back',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TcButton(
+                        onTap: _step == 2 ? _submit : _next,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _step == 2
+                                  ? Icons.check_rounded
+                                  : Icons.arrow_forward_rounded,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              _step == 2 ? 'Create' : 'Next',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStepBody(int step) {
+    switch (step) {
+      case 0:
+        return _StepBasics(
+          key: const ValueKey('step0'),
+          initialTitle: _raw,
+          descCtrl: _descCtrl,
+          onTitleChanged: (parsed) {
+            setState(() {
+              _raw = parsed.$1;
+              _title = parsed.$2;
+              _tags = parsed.$3;
+            });
+          },
+          priority: _priority,
+          onPriorityChanged: (v) => setState(() => _priority = v),
+          onSubtasksChanged: (subs) => setState(
+            () => _subtasks
+              ..clear()
+              ..addAll(subs),
+          ),
+          subtasks: _subtasks,
+        );
+
+      case 1:
+        return _StepSchedule(
+          key: const ValueKey('step1'),
+          startLocal: _startLocal,
+          endLocal: _endLocal,
+          onPickStart: (t) => setState(() => _startLocal = t),
+          onPickEnd: (t) => setState(() => _endLocal = t),
+          repeating: repeating,
+          onRepeatingChanged: (r) => setState(() => repeating = r),
+          rruleNotifier: (r) => setState(() {
+            _rrule = r;
+          }),
+          rrule: _rrule,
+        );
+
+      case 2:
+        return _StepCompletion(
+          key: const ValueKey('step2'),
+          mode: _completionMode,
+          onModeChanged: (m) => setState(() => _completionMode = m),
+          binaryDone: _binaryDone,
+          onBinaryChanged: (v) => setState(() => _binaryDone = v),
+          targetCtrl: _targetCtrl,
+          unitCtrl: _unitCtrl,
+        );
+
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+}
+
+class _StepHeader extends StatelessWidget {
+  const _StepHeader({required this.step});
+  final int step;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget chip(int idx, String label) {
+      final active = idx == step;
+      final done = idx < step;
+      final color = active ? Colors.black : Colors.black.withOpacity(0.85);
+      final bg = active
+          ? Colors.black.withOpacity(0.10)
+          : Colors.white.withOpacity(0.55);
+
+      return Expanded(
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: color.withOpacity(active ? 0.65 : 0.85),
+              width: 1.2,
+            ),
+          ),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (done)
+                  Icon(
+                    Icons.check_circle_rounded,
+                    size: 16,
+                    color: Colors.black,
+                  )
+                else
+                  Icon(
+                    active
+                        ? Icons.radio_button_checked_rounded
+                        : Icons.radio_button_unchecked_rounded,
+                    size: 16,
+                    color: active
+                        ? Colors.black
+                        : Colors.black.withOpacity(0.55),
+                  ),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: active
+                        ? Colors.black
+                        : Colors.black.withOpacity(0.55),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 13.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        chip(0, 'Basics'),
+        const SizedBox(width: 8),
+        chip(1, 'Schedule'),
+        const SizedBox(width: 8),
+        chip(2, 'Completion'),
+      ],
+    );
+  }
+}
+
+class _StepBasics extends StatelessWidget {
+  const _StepBasics({
+    super.key,
+    this.initialTitle,
+    required this.descCtrl,
+
+    required this.onTitleChanged,
+
+    required this.priority,
+    required this.onPriorityChanged,
+
+    required this.subtasks,
+    required this.onSubtasksChanged,
+  });
+  final String? initialTitle;
+  final TextEditingController descCtrl;
+  final ValueChanged<(String raw, String title, List<String> tags)>
+  onTitleChanged;
+
+  final int priority;
+  final ValueChanged<int> onPriorityChanged;
+
+  final List<String> subtasks;
+  final ValueChanged<List<String>> onSubtasksChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      key: key,
+      children: [
+        TaskInputAdvancedField(
+          initialText: initialTitle ?? '',
+          availableTags: ['test', 'test2', 'test3', 'test4', 'test5'],
+          onChanged: (parsed) {
+            onTitleChanged((parsed.raw, parsed.title, parsed.tags));
+          },
+        ),
+        const SizedBox(height: 12),
+        TcTextField(
+          controller: descCtrl,
+          maxLines: 3,
+          labelText: 'Description',
+          leading: const Icon(Icons.description_outlined),
+        ),
+        const SizedBox(height: 12),
+        PriorityField(value: priority, onChanged: onPriorityChanged),
+        const SizedBox(height: 12),
+
+        // Subtasks
+        AddSubtasksField(
+          onChanged: onSubtasksChanged,
+          initialSubtasks: subtasks,
+        ),
+      ],
+    );
+  }
+}
+
+class _StepSchedule extends StatelessWidget {
+  const _StepSchedule({
+    super.key,
+    required this.startLocal,
+    required this.endLocal,
+    required this.onPickStart,
+    required this.onPickEnd,
+
+    required this.repeating,
+    required this.onRepeatingChanged,
+
+    required this.rrule,
+    required this.rruleNotifier,
+  });
+
+  final DateTime? startLocal;
+  final DateTime? endLocal;
+
+  final ValueChanged<DateTime?> onPickStart;
+  final ValueChanged<DateTime?> onPickEnd;
+
+  final bool repeating;
+  final ValueChanged<bool> onRepeatingChanged;
+
+  final RecurrenceRule? rrule;
+  final ValueChanged<RecurrenceRule?> rruleNotifier;
+
+  @override
+  Widget build(BuildContext context) {
+    final baseStart = startLocal ?? DateTime.now();
+
+    return Column(
+      key: key,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: DateTimeField(
+                label: 'Start',
+                value: startLocal,
+                onPick: onPickStart,
+                onClear: () => onPickStart(null),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: DateTimeField(
+                label: 'End',
+                value: endLocal,
+                onPick: onPickEnd,
+                onClear: () => onPickEnd(null),
+              ),
+            ),
+            const SizedBox(width: 12),
+            IconButton(
+              icon: Icon(Icons.repeat_rounded),
+              onPressed: () {
+                if (startLocal != null && endLocal != null) {
+                  onRepeatingChanged(!repeating);
+                }
+              },
+              isSelected: repeating,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        if (repeating)
+          RRulePicker(
+            initialStartLocal: baseStart,
+            initialRrule: rrule,
+            onChanged: (r) {
+              rruleNotifier(r);
+            },
+          ),
+      ],
+    );
+  }
+}
+
+enum _CompletionMode { binary, quantitative }
+
+class _StepCompletion extends StatelessWidget {
+  const _StepCompletion({
+    super.key,
+    required this.mode,
+    required this.onModeChanged,
+    required this.binaryDone,
+    required this.onBinaryChanged,
+    required this.targetCtrl,
+    required this.unitCtrl,
+  });
+
+  final _CompletionMode mode;
+  final ValueChanged<_CompletionMode> onModeChanged;
+
+  final bool binaryDone;
+  final ValueChanged<bool> onBinaryChanged;
+
+  final TextEditingController targetCtrl;
+  final TextEditingController unitCtrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return TcInputDecorator(
+      labelText: 'Completion',
+      prefixIcon: const Icon(Icons.verified_outlined),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _ModeSegment(mode: mode, onChanged: onModeChanged),
+          const SizedBox(height: 12),
+
+          if (mode == _CompletionMode.quantitative)
+            _QuantCompletionForm(targetCtrl: targetCtrl, unitCtrl: unitCtrl),
+        ],
+      ),
+    );
+  }
+}
+
+class _ModeSegment extends StatelessWidget {
+  const _ModeSegment({required this.mode, required this.onChanged});
+  final _CompletionMode mode;
+  final ValueChanged<_CompletionMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: TcRadioButton(
+            selected: mode == _CompletionMode.binary,
+            onTap: () => onChanged(_CompletionMode.binary),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.check_circle_outline_rounded,
+                  size: 18,
+                  color: mode == _CompletionMode.binary
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.black.withOpacity(0.55),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Yes/No',
+                  style: TextStyle(
+                    color: mode == _CompletionMode.binary
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.black.withOpacity(0.55),
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: TcRadioButton(
+            selected: mode == _CompletionMode.quantitative,
+            onTap: () => onChanged(_CompletionMode.quantitative),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.format_list_numbered_rounded,
+                  size: 18,
+                  color: mode == _CompletionMode.quantitative
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.black.withOpacity(0.55),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Quantity',
+                  style: TextStyle(
+                    color: mode == _CompletionMode.quantitative
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.black.withOpacity(0.55),
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _QuantCompletionForm extends StatelessWidget {
+  const _QuantCompletionForm({
+    required this.targetCtrl,
+    required this.unitCtrl,
+  });
+
+  final TextEditingController targetCtrl;
+  final TextEditingController unitCtrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TcTextField(controller: targetCtrl, labelText: 'Target'),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: TcTextField(controller: unitCtrl, labelText: 'Unit'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}

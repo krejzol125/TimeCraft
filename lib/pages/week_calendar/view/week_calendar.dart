@@ -14,8 +14,6 @@ import 'package:timecraft/repo/task_repo.dart';
 class WeekCalendar extends StatefulWidget {
   WeekCalendar(this.tasks, this.weekStartDate, {super.key});
 
-  // Wysokość 30 minut
-  //final double halfHourHeight = 40.0;
   final double baseHalfHourHeight = 40.0;
   final int halfHoursPerDay = 48;
   final List<String> weekdays = const [
@@ -29,9 +27,7 @@ class WeekCalendar extends StatefulWidget {
   ];
   List<TaskInstance> tasks = [];
 
-  // Snapping co ile minut
-  static const int snapMinutes = 5;
-  // Minimalna długość zadania
+  static const int snapMinutes = 1;
   static const int minDurationMinutes = 10;
 
   final DateTime weekStartDate;
@@ -45,8 +41,8 @@ class _WeekCalendarState extends State<WeekCalendar> {
 
   @override
   void initState() {
-    tasks = widget.tasks;
-    print('Initializing WeekCalendar with ${tasks.length} tasks');
+    //tasks = widget.tasks;
+    print('Initializing WeekCalendar with ${widget.tasks.length} tasks');
     super.initState();
   }
 
@@ -68,7 +64,7 @@ class _WeekCalendarState extends State<WeekCalendar> {
 
   final scrollKey = GlobalKey();
 
-  late List<TaskInstance> tasks = [];
+  //late List<TaskInstance> tasks = [];
 
   // Ghost (cień) – aktualizowany na żywo podczas drag
   String? _ghostDay;
@@ -128,9 +124,12 @@ class _WeekCalendarState extends State<WeekCalendar> {
     final Duration dur = t.duration ?? _defaultDuration;
 
     setState(() {
-      final idx = tasks.indexWhere((x) => x.taskId == t.taskId);
+      final idx = widget.tasks.indexWhere((x) => x.taskId == t.taskId);
       if (idx != -1) {
-        tasks[idx] = tasks[idx].copyWith(startTime: newStart, duration: dur);
+        widget.tasks[idx] = widget.tasks[idx].copyWith(
+          startTime: newStart,
+          duration: dur,
+        );
       }
     });
   }
@@ -142,9 +141,9 @@ class _WeekCalendarState extends State<WeekCalendar> {
     );
     final safeEnd = newEnd.isAfter(minEnd) ? newEnd : minEnd;
     setState(() {
-      final idx = tasks.indexWhere((x) => x.taskId == t.taskId);
+      final idx = widget.tasks.indexWhere((x) => x.taskId == t.taskId);
       if (idx != -1) {
-        tasks[idx] = tasks[idx].copyWith(
+        widget.tasks[idx] = widget.tasks[idx].copyWith(
           duration: safeEnd.difference(t.startTime!),
         );
       }
@@ -470,7 +469,7 @@ class _WeekCalendarState extends State<WeekCalendar> {
                 ),
 
                 // Istniejące taski w tym dniu
-                ...tasks
+                ...widget.tasks
                     .where(
                       (e) =>
                           e.startTime != null &&

@@ -5,7 +5,7 @@ import 'package:timecraft/repo/drift/tasks/tables/task_pattern.dart';
 @TableIndex(name: "rid_index", columns: {#startTime})
 class TaskInstances extends Table {
   TextColumn get taskId => text().references(TaskPatterns, #id)();
-  TextColumn get rid => text().nullable()();
+  DateTimeColumn get rid => dateTime().nullable()();
 
   TextColumn get title => text()();
   TextColumn get completion => text().withDefault(const Constant('0 false'))();
@@ -13,6 +13,7 @@ class TaskInstances extends Table {
 
   DateTimeColumn get startTime => dateTime().nullable()();
   IntColumn get duration => integer().nullable()();
+  BoolColumn get isRepeating => boolean().withDefault(const Constant(false))();
 
   TextColumn get tags => text().nullable()();
   IntColumn get priority => integer().withDefault(const Constant(3))();

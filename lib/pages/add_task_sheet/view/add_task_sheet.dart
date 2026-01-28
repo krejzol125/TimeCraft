@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:rrule/rrule.dart';
 import 'package:timecraft/components/add_subtasks_field.dart';
 import 'package:timecraft/components/date_time_field.dart';
 import 'package:timecraft/components/priority_field.dart';
+import 'package:timecraft/components/rrule_picker.dart';
 import 'package:timecraft/model/completion.dart';
 import 'package:timecraft/model/task_instance.dart';
 import 'package:timecraft/components/task_input_field.dart';
 import 'package:timecraft/model/task_pattern.dart';
 import 'package:timecraft/system_design/tc_button.dart';
 import 'package:timecraft/system_design/tc_fext_field.dart';
+import 'package:timecraft/system_design/tc_icon_button.dart';
 
 class AddTaskSheet extends StatefulWidget {
   const AddTaskSheet({super.key, required this.onSubmit});
@@ -25,6 +28,8 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
 
   DateTime? _start;
   DateTime? _end;
+  bool repeating = false;
+  RecurrenceRule? _rrule;
   int _priority = 2;
 
   //final List<TextEditingController> _subtaskCtrls = [];
@@ -37,31 +42,6 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     //   c.dispose();
     // }
     super.dispose();
-  }
-
-  Future<DateTime?> _pickDateTime(
-    BuildContext context, {
-    DateTime? initial,
-  }) async {
-    final now = DateTime.now();
-    final base = initial ?? now;
-    final date = await showDatePicker(
-      context: context,
-      initialDate: base,
-      firstDate: DateTime(now.year - 1),
-      lastDate: DateTime(now.year + 5),
-    );
-    if (date == null) return null;
-    final time = await showTimePicker(
-      context: mounted
-          ? context
-          : throw Exception(
-              'context nie jest mounted cokolwiek to znaczy nwm lint krzyczał',
-            ),
-      initialTime: TimeOfDay.fromDateTime(base),
-    );
-    if (time == null) return null;
-    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
   }
 
   void _submit() {
@@ -80,6 +60,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
       );
       return;
     }
+
     if (_title.trim().isEmpty) {
       ScaffoldMessenger.of(
         context,
@@ -108,6 +89,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
           ? _end!.difference(_start!)
           : null,
       tags: tags,
+      rrule: _rrule,
       priority: _priority,
       reminders: const [],
       subTasks: subTasks,
@@ -165,21 +147,6 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                   ),
                   const SizedBox(height: 8),
 
-                  //title
-                  // TextFormField(
-                  //   controller: _titleCtrl,
-                  //   decoration: const InputDecoration(
-                  //     labelText: 'Title *',
-                  //     prefixIcon: Icon(Icons.title),
-                  //   ),
-                  //   textInputAction: TextInputAction.next,
-                  //   validator: (v) {
-                  //     if (v == null || v.trim().isEmpty)
-                  //       return 'Title is required';
-                  //     if (v.trim().length < 2) return 'Title is too short';
-                  //     return null;
-                  //   },
-                  // ),
                   TaskInputAdvancedField(
                     initialText: _title,
                     availableTags: ['test', 'test2'],
@@ -206,37 +173,60 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                         child: DateTimeField(
                           label: 'Start',
                           value: _start,
-                          onPick: () async {
-                            final dt = await _pickDateTime(
-                              context,
-                              initial: _start ?? DateTime.now(),
-                            );
-                            if (dt != null) setState(() => _start = dt);
-                          },
-                          onClear: () => setState(() => _start = null),
+                          onPick: (dt) => setState(() {
+                            _start = dt;
+                          }),
+                          onClear: () => setState(() {
+                            _start = null;
+                            repeating = false;
+                          }),
                         ),
                       ),
+                      const SizedBox(width: 12),
+                      Icon(Icons.arrow_forward),
                       const SizedBox(width: 12),
                       Expanded(
                         child: DateTimeField(
                           label: 'End',
                           value: _end,
-                          onPick: () async {
-                            final base = _start ?? DateTime.now();
-                            final dt = await _pickDateTime(
-                              context,
-                              initial: _end ?? base,
-                            );
-                            if (dt != null) setState(() => _end = dt);
-                          },
-                          onClear: () => setState(() => _end = null),
+                          onPick: (dt) => setState(() {
+                            _end = dt;
+                          }),
+                          onClear: () => setState(() {
+                            _end = null;
+                            repeating = false;
+                          }),
                         ),
+                      ),
+                      const SizedBox(width: 12),
+                      IconButton(
+                        icon: Icon(Icons.repeat_rounded),
+                        onPressed: () {
+                          if (_start != null && _end != null) {
+                            setState(() {
+                              repeating = !repeating;
+                            });
+                          }
+                        },
+                        isSelected: repeating,
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
 
-                  //TODO: make it dots/radio
+                  // RRule
+                  if (repeating) ...[
+                    RRulePicker(
+                      initialStartLocal: _start ?? DateTime.now(),
+                      initialRrule: _rrule,
+                      onChanged: (v) {
+                        _rrule = v;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+
+                  // Priority
                   PriorityField(
                     value: _priority,
                     onChanged: (int p) {
@@ -247,15 +237,6 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                   ),
 
                   const SizedBox(height: 12),
-
-                  // TextFormField(
-                  //   controller: _tagsCtrl,
-                  //   decoration: const InputDecoration(
-                  //     labelText: 'Tags',
-                  //     prefixIcon: Icon(Icons.sell_outlined),
-                  //   ),
-                  // ),
-                  // const SizedBox(height: 16),
 
                   // Subtasks
                   AddSubtasksField(

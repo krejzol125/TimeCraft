@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:timecraft/system_design/tc_button.dart';
 import 'package:timecraft/system_design/tc_fext_field.dart';
+import 'package:timecraft/system_design/tc_input_decorator.dart';
 
 class AddSubtasksField extends StatefulWidget {
   const AddSubtasksField({
@@ -13,116 +13,104 @@ class AddSubtasksField extends StatefulWidget {
   final List<String> initialSubtasks;
 
   @override
-  State<AddSubtasksField> createState() => _AddSubtasksFieldState();
+  State<AddSubtasksField> createState() =>
+      _AddSubtasksFieldState(initialSubtasks);
 }
 
 class _AddSubtasksFieldState extends State<AddSubtasksField> {
-  final List<TextEditingController> _subtaskCtrls = [];
+  _AddSubtasksFieldState(List<String> initialSubtasks) {
+    _subtasks = List.from(initialSubtasks);
+  }
+  late List<String> _subtasks;
+  late TextEditingController _subtaskCtrls;
+
+  @override
+  void initState() {
+    super.initState();
+    _subtaskCtrls = TextEditingController();
+  }
+
+  void addSubtask(String name) {
+    setState(() {
+      _subtasks.add(name);
+    });
+    widget.onChanged(_subtasks);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return InputDecorator(
-      decoration: InputDecoration(
-        labelText: 'Subtasks',
-        prefixIcon: const Icon(Icons.checklist_outlined),
-        filled: true,
-        fillColor: Theme.of(context).colorScheme.surface,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Theme.of(context).dividerColor),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 12,
-        ),
-      ),
+    return TcInputDecorator(
+      labelText: 'Subtasks',
+      prefixIcon: const Icon(Icons.checklist_outlined),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ...List.generate(_subtaskCtrls.length, (i) {
+          TcTextField(
+            controller: _subtaskCtrls,
+            hintText: 'Add subtask...',
+            leading: IconButton(
+              icon: Icon(
+                Icons.add,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              tooltip: 'Add subtask',
+              onPressed: () {
+                addSubtask(_subtaskCtrls.text);
+                _subtaskCtrls.clear();
+              },
+            ),
+          ),
+          ...List.generate(_subtasks.length, (i) {
             return Padding(
               padding: const EdgeInsets.all(2.0),
-              child: TcTextField(
-                controller: _subtaskCtrls[i],
-                onChanged: (s) =>
-                    widget.onChanged(_subtaskCtrls.map((c) => c.text).toList()),
-                hintText: 'Subtask ${i + 1}',
-                leading: const Icon(Icons.subdirectory_arrow_right),
-                trailing: IconButton(
-                  tooltip: 'Remove',
-                  onPressed: () {
-                    final c = _subtaskCtrls.removeAt(i);
-                    widget.onChanged(_subtaskCtrls.map((c) => c.text).toList());
-                    c.dispose();
-                    setState(() {});
-                  },
-                  icon: const Icon(Icons.delete_outline),
-                ),
+              child: _SubtaskRow(
+                name: _subtasks[i],
+                onRemove: () {
+                  _subtasks.removeAt(i);
+                  widget.onChanged(_subtasks);
+                  setState(() {}); // Refresh UI
+                },
               ),
             );
           }),
-          Padding(
-            padding: const EdgeInsets.all(2.0),
-            child: TcButton(
-              onTap: () {
-                _subtaskCtrls.add(TextEditingController());
-                widget.onChanged(_subtaskCtrls.map((c) => c.text).toList());
-                setState(() {});
-              },
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.add,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  SizedBox(width: 6),
-                  Text(
-                    'Add Subtask',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
         ],
       ),
     );
-    // return Padding(
-    //   padding: const EdgeInsets.only(bottom: 8),
-    //   child: Row(
-    //     children: [
-    //       Expanded(
-    //         child: TextField(
-    //           controller: _subtaskCtrls[i],
-    //           onChanged: (s) => widget.onChanged(
-    //             _subtaskCtrls.map((c) => c.text).toList(),
-    //           ),
-    //           decoration: InputDecoration(
-    //             hintText: 'Subtask ${i + 1}',
-    //             prefixIcon: const Icon(Icons.subdirectory_arrow_right),
-    //           ),
-    //         ),
-    //       ),
-    //       const SizedBox(width: 8),
-    //       IconButton(
-    //         tooltip: 'Remove',
-    //         onPressed: () {
-    //           final c = _subtaskCtrls.removeAt(i);
-    //           widget.onChanged(
-    //             _subtaskCtrls.map((c) => c.text).toList(),
-    //           );
-    //           c.dispose();
-    //           setState(() {});
-    //         },
-    //         icon: const Icon(Icons.delete_outline),
-    //       ),
-    //     ],
-    //   ),
-    // );
+  }
+}
+
+class _SubtaskRow extends StatelessWidget {
+  const _SubtaskRow({required this.name, required this.onRemove});
+
+  final String name;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: TcInputDecorator(
+        labelText: '',
+        prefixIcon: Icon(
+          Icons.subdirectory_arrow_right_rounded,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        suffixIcon: IconButton(
+          onPressed: onRemove,
+          icon: Icon(
+            Icons.close_rounded,
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.9),
+          ),
+          splashRadius: 18,
+        ),
+        child: Text(
+          name,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
   }
 }

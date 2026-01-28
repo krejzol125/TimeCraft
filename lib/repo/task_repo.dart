@@ -1,3 +1,4 @@
+import 'package:rrule/rrule.dart';
 import 'package:timecraft/model/task_instance.dart';
 import 'package:timecraft/model/task_override.dart';
 import 'package:timecraft/model/task_pattern.dart';
@@ -59,6 +60,23 @@ class TaskRepo {
   ) async {
     TaskPattern? pattern = await _taskPatternDao.getPatternById(taskId);
     if (pattern == null) return;
+    if (pattern.rrule?.frequency == Frequency.weekly) {
+      print('updating weekly to ${startTime.weekday} from ${pattern.rrule}');
+      final rrule = pattern.rrule!.copyWith(
+        byWeekDays: [ByWeekDayEntry(startTime.weekday)],
+      );
+      print('new rrule: $rrule');
+      _taskPatternDao.upsertPattern(
+        pattern.copyWith(
+          startTime: startTime,
+          duration: duration,
+          rrule: rrule,
+          rev: DateTime.now().millisecondsSinceEpoch,
+          updatedAt: DateTime.now(),
+        ),
+      );
+      return;
+    }
     _taskPatternDao.upsertPattern(
       pattern.copyWith(
         startTime: startTime,

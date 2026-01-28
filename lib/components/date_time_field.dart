@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:timecraft/system_design/tc_input_decorator.dart';
 
 class DateTimeField extends StatelessWidget {
   const DateTimeField({
@@ -11,7 +12,7 @@ class DateTimeField extends StatelessWidget {
 
   final String label;
   final DateTime? value;
-  final VoidCallback onPick;
+  final void Function(DateTime?) onPick;
   final VoidCallback onClear;
 
   String timeToString(DateTime dt) =>
@@ -22,31 +23,22 @@ class DateTimeField extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = value != null ? timeToString(value!) : 'Not set';
     return InkWell(
-      onTap: onPick,
+      onTap: () {
+        _pickDateTime(context, initial: value).then((dt) {
+          onPick(dt);
+        });
+      },
       borderRadius: BorderRadius.circular(10),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: const Icon(Icons.schedule_outlined),
-          suffixIcon: value != null
-              ? IconButton(
-                  tooltip: 'Clear',
-                  onPressed: onClear,
-                  icon: const Icon(Icons.close),
-                )
-              : null,
-          filled: true,
-          fillColor: Theme.of(context).colorScheme.surface,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: Theme.of(context).dividerColor),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 14,
-            vertical: 12,
-          ),
-        ),
+      child: TcInputDecorator(
+        labelText: label,
+        suffixIcon: value != null
+            ? IconButton(
+                icon: const Icon(Icons.clear_rounded),
+                onPressed: onClear,
+              )
+            : null,
+        prefixIcon: const Icon(Icons.schedule_outlined),
+
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Text(
@@ -58,5 +50,26 @@ class DateTimeField extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<DateTime?> _pickDateTime(
+    BuildContext context, {
+    DateTime? initial,
+  }) async {
+    final now = DateTime.now();
+    final base = initial ?? now;
+    final date = await showDatePicker(
+      context: context,
+      initialDate: base,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 5),
+    );
+    if (date == null) return null;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(base),
+    );
+    if (time == null) return null;
+    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
   }
 }

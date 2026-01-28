@@ -19,6 +19,7 @@ class TaskInstance {
   DateTime? get endTime => (startTime != null && duration != null)
       ? startTime!.add(duration!)
       : null;
+  bool isRepeating;
 
   List<String> tags;
   int priority;
@@ -32,6 +33,7 @@ class TaskInstance {
     this.description = '',
     this.startTime,
     this.duration,
+    this.isRepeating = false,
     this.tags = const [],
     this.priority = 3,
     this.reminders = const [],
@@ -49,6 +51,7 @@ class TaskInstance {
        description = taskOverride?.description ?? tp.description,
        startTime = taskOverride?.startTime ?? startTime,
        duration = taskOverride?.duration ?? tp.duration,
+       isRepeating = tp.rrule != null,
        tags = taskOverride?.tags ?? tp.tags,
        priority = taskOverride?.priority ?? tp.priority,
        reminders = taskOverride?.reminders ?? tp.reminders,
@@ -63,6 +66,7 @@ class TaskInstance {
     String? description,
     DateTime? startTime,
     Duration? duration,
+    bool? isRepeating,
     List<String>? tags,
     int? priority,
     List<NotiReminder>? reminders,
@@ -75,6 +79,7 @@ class TaskInstance {
       description: description ?? this.description,
       startTime: startTime ?? this.startTime,
       duration: duration ?? this.duration,
+      isRepeating: isRepeating ?? this.isRepeating,
       tags: tags ?? this.tags,
       priority: priority ?? this.priority,
       reminders: reminders ?? this.reminders,
@@ -91,6 +96,7 @@ class TaskInstance {
       duration = entry.duration != null
           ? Duration(milliseconds: entry.duration!)
           : null,
+      isRepeating = entry.isRepeating,
       tags = entry.tags != null && entry.tags!.isNotEmpty
           ? entry.tags!.split(';')
           : [],
@@ -106,7 +112,8 @@ class TaskInstance {
               final parts = e.split(',');
               return (parts[0], parts[1].toLowerCase() == 'true');
             }).toList()
-          : [];
+          : [],
+      rid = entry.rid;
 
   TaskInstancesCompanion toCompanion() {
     return TaskInstancesCompanion.insert(
@@ -116,11 +123,13 @@ class TaskInstance {
       description: Value(description),
       startTime: Value(startTime),
       duration: Value(duration?.inMilliseconds),
+      isRepeating: Value(isRepeating),
       tags: Value(tags.join(';')),
       priority: Value(priority),
       reminders: Value(reminders.map((e) => e.toJson()).join(';')),
       subTasks: Value(subTasks.map((e) => "${e.$1},${e.$2}").join(';')),
       deleted: Value(false),
+      rid: Value(rid),
     );
   }
 }
