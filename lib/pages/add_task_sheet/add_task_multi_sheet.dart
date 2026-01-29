@@ -50,9 +50,6 @@ class AddTaskSheetMultiStep extends StatefulWidget {
 class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
   static const bgCard = Color(0xFFF6F7FB);
   static const stroke = Color(0xFFB9BFCC);
-  static const text = Color(0xFF111827);
-  static const subtext = Color(0xFF6B7280);
-  static const accent = Color(0xFF1F4AA8);
   int _step = 0;
 
   String _raw = '';
@@ -84,7 +81,7 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
     _endLocal = widget.initialPattern?.endTime ?? widget.initialEnd;
     if (widget.initialPattern != null) {
       final pattern = widget.initialPattern!;
-      _raw = pattern.title + ' ' + (pattern.tags.map((e) => '#$e').join(' '));
+      _raw = '${pattern.title} ${pattern.tags.map((e) => '#$e').join(' ')}';
       _title = pattern.title;
       _tags = pattern.tags;
       _descCtrl.text = pattern.description;
@@ -195,116 +192,137 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
         child: Container(
           margin: const EdgeInsets.fromLTRB(12, 12, 12, 12),
           decoration: BoxDecoration(
-            color: bgCard.withOpacity(0.96),
+            color: bgCard.withValues(alpha: 0.96),
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: stroke.withOpacity(0.95), width: 1.2),
+            border: Border.all(color: stroke.withValues(alpha: 0.95), width: 1.2),
             boxShadow: [
               BoxShadow(
                 blurRadius: 18,
                 offset: const Offset(0, 10),
-                color: Colors.black.withOpacity(0.10),
+                color: Colors.black.withValues(alpha: 0.10),
               ),
             ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Row(
+          child: DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.62,
+            minChildSize: 0.35,
+            maxChildSize: 0.65,
+            builder: (context, scrollController) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Expanded(
-                      child: Text(
-                        'Create Task',
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                    if (widget.initialPattern != null)
-                      IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          Navigator.of(context).maybePop<TaskPattern>(
-                            widget.initialPattern!.copyWith(deleted: true),
-                          );
-                        },
-                      ),
-                    IconButton(
-                      onPressed: () =>
-                          Navigator.of(context).maybePop<TaskPattern>(null),
-                      icon: const Icon(Icons.close, color: Colors.black),
-                      splashRadius: 22,
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 10),
-
-                _StepHeader(step: _step),
-
-                const SizedBox(height: 12),
-
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  switchInCurve: Curves.easeOut,
-                  switchOutCurve: Curves.easeIn,
-                  child: _buildStepBody(_step),
-                ),
-
-                const SizedBox(height: 16),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: TcButton(
-                        outlined: true,
-                        onTap: _step == 0
-                            ? () => Navigator.of(
-                                context,
-                              ).maybePop<TaskPattern>(null)
-                            : _back,
-                        child: Text(
-                          _step == 0 ? 'Cancel' : 'Back',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Create Task',
+                            style: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.black,
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TcButton(
-                        onTap: _step == 2 ? _submit : _next,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              _step == 2
-                                  ? Icons.check_rounded
-                                  : Icons.arrow_forward_rounded,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              _step == 2 ? 'Create' : 'Next',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                          ],
+                        if (widget.initialPattern != null)
+                          IconButton(
+                            icon: Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              Navigator.of(context).maybePop<TaskPattern>(
+                                widget.initialPattern!.copyWith(deleted: true),
+                              );
+                            },
+                          ),
+                        IconButton(
+                          onPressed: () =>
+                              Navigator.of(context).maybePop<TaskPattern>(null),
+                          icon: const Icon(Icons.close, color: Colors.black),
+                          splashRadius: 22,
                         ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    _StepHeader(step: _step),
+
+                    const SizedBox(height: 12),
+
+                    Flexible(
+                      child: ListView(
+                        controller: scrollController,
+                        shrinkWrap: true,
+                        children: [
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 220),
+                            switchInCurve: Curves.easeOut,
+                            switchOutCurve: Curves.easeIn,
+                            child: _buildStepBody(_step),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TcButton(
+                                  outlined: true,
+                                  onTap: _step == 0
+                                      ? () => Navigator.of(
+                                          context,
+                                        ).maybePop<TaskPattern>(null)
+                                      : _back,
+                                  child: Text(
+                                    _step == 0 ? 'Cancel' : 'Back',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: TcButton(
+                                  onTap: _step == 2 ? _submit : _next,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        _step == 2
+                                            ? Icons.check_rounded
+                                            : Icons.arrow_forward_rounded,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        _step == 2 ? 'Create' : 'Next',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
@@ -315,7 +333,7 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
     switch (step) {
       case 0:
         return _StepBasics(
-          key: const ValueKey('step0'),
+          //key: const ValueKey('step0'),
           initialTitle: _raw,
           descCtrl: _descCtrl,
           onTitleChanged: (parsed) {
@@ -337,7 +355,7 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
 
       case 1:
         return _StepSchedule(
-          key: const ValueKey('step1'),
+          //key: const ValueKey('step1'),
           startLocal: _startLocal,
           endLocal: _endLocal,
           onPickStart: (t) => setState(() => _startLocal = t),
@@ -352,7 +370,7 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
 
       case 2:
         return _StepCompletion(
-          key: const ValueKey('step2'),
+          //key: const ValueKey('step2'),
           mode: _completionMode,
           onModeChanged: (m) => setState(() => _completionMode = m),
           targetCtrl: _targetCtrl,
@@ -374,10 +392,10 @@ class _StepHeader extends StatelessWidget {
     Widget chip(int idx, String label) {
       final active = idx == step;
       final done = idx < step;
-      final color = active ? Colors.black : Colors.black.withOpacity(0.85);
+      final color = active ? Colors.black : Colors.black.withValues(alpha: 0.85);
       final bg = active
-          ? Colors.black.withOpacity(0.10)
-          : Colors.white.withOpacity(0.55);
+          ? Colors.black.withValues(alpha: 0.10)
+          : Colors.white.withValues(alpha: 0.55);
 
       return Expanded(
         child: Container(
@@ -386,7 +404,7 @@ class _StepHeader extends StatelessWidget {
             color: bg,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: color.withOpacity(active ? 0.65 : 0.85),
+              color: color.withValues(alpha: active ? 0.65 : 0.85),
               width: 1.2,
             ),
           ),
@@ -408,7 +426,7 @@ class _StepHeader extends StatelessWidget {
                     size: 16,
                     color: active
                         ? Colors.black
-                        : Colors.black.withOpacity(0.55),
+                        : Colors.black.withValues(alpha: 0.55),
                   ),
                 const SizedBox(width: 8),
                 Text(
@@ -416,7 +434,7 @@ class _StepHeader extends StatelessWidget {
                   style: TextStyle(
                     color: active
                         ? Colors.black
-                        : Colors.black.withOpacity(0.55),
+                        : Colors.black.withValues(alpha: 0.55),
                     fontWeight: FontWeight.w900,
                     fontSize: 13.5,
                   ),
@@ -442,7 +460,6 @@ class _StepHeader extends StatelessWidget {
 
 class _StepBasics extends StatelessWidget {
   const _StepBasics({
-    super.key,
     this.initialTitle,
     required this.descCtrl,
 
@@ -500,7 +517,6 @@ class _StepBasics extends StatelessWidget {
 
 class _StepSchedule extends StatelessWidget {
   const _StepSchedule({
-    super.key,
     required this.startLocal,
     required this.endLocal,
     required this.onPickStart,
@@ -542,7 +558,7 @@ class _StepSchedule extends StatelessWidget {
                 onClear: () => onPickStart(null),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(height: 12, width: 12),
             Expanded(
               child: DateTimeField(
                 label: 'End',
@@ -582,7 +598,6 @@ enum _CompletionMode { binary, quantitative }
 
 class _StepCompletion extends StatelessWidget {
   const _StepCompletion({
-    super.key,
     required this.mode,
     required this.onModeChanged,
     required this.targetCtrl,
@@ -635,7 +650,7 @@ class _ModeSegment extends StatelessWidget {
                   size: 18,
                   color: mode == _CompletionMode.binary
                       ? Theme.of(context).colorScheme.primary
-                      : Colors.black.withOpacity(0.55),
+                      : Colors.black.withValues(alpha: 0.55),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -643,7 +658,7 @@ class _ModeSegment extends StatelessWidget {
                   style: TextStyle(
                     color: mode == _CompletionMode.binary
                         ? Theme.of(context).colorScheme.primary
-                        : Colors.black.withOpacity(0.55),
+                        : Colors.black.withValues(alpha: 0.55),
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -663,8 +678,8 @@ class _ModeSegment extends StatelessWidget {
                   Icons.format_list_numbered_rounded,
                   size: 18,
                   color: mode == _CompletionMode.quantitative
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.black.withOpacity(0.55),
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.black.withValues(alpha: 0.55),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -672,7 +687,7 @@ class _ModeSegment extends StatelessWidget {
                   style: TextStyle(
                     color: mode == _CompletionMode.quantitative
                         ? Theme.of(context).colorScheme.primary
-                        : Colors.black.withOpacity(0.55),
+                        : Colors.black.withValues(alpha: 0.55),
                     fontWeight: FontWeight.w900,
                   ),
                 ),

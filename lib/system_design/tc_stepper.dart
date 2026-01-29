@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:timecraft/components/rrule_picker.dart';
 
 class TcStepper extends StatelessWidget {
   const TcStepper({
@@ -19,9 +18,9 @@ class TcStepper extends StatelessWidget {
     final v = value.clamp(min, max);
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.55),
+        color: Colors.white.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.withOpacity(0.45)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.45)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -31,12 +30,12 @@ class TcStepper extends StatelessWidget {
             splashRadius: 18,
             onPressed: v > min ? () => onChanged(v - 1) : null,
             icon: const Icon(Icons.remove_rounded),
-            color: Colors.grey.withOpacity(0.45),
+            color: Colors.grey.withValues(alpha: 0.45),
           ),
           Text(
             '$v',
             style: TextStyle(
-              color: Colors.grey.withOpacity(0.45),
+              color: Colors.grey.withValues(alpha: 0.45),
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -45,7 +44,7 @@ class TcStepper extends StatelessWidget {
             splashRadius: 18,
             onPressed: v < max ? () => onChanged(v + 1) : null,
             icon: const Icon(Icons.add_rounded),
-            color: Colors.grey.withOpacity(0.45),
+            color: Colors.grey.withValues(alpha: 0.45),
           ),
         ],
       ),

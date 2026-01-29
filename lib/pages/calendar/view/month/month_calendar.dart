@@ -27,7 +27,7 @@ class MonthToDetailPage extends StatefulWidget {
 
 class _MonthToDetailPageState extends State<MonthToDetailPage> {
   // ===== tokens (pasują do Twojego stylu) =====
-  static const _bgCard = Color(0xFFF6F7FB);
+  //static const _bgCard = Color(0xFFF6F7FB);
   static const _stroke = Color(0xFFB9BFCC);
   static const _text = Color(0xFF111827);
   static const _subtext = Color(0xFF6B7280);
@@ -162,12 +162,12 @@ class _MonthToDetailPageState extends State<MonthToDetailPage> {
                   ? const EdgeInsets.fromLTRB(14, 12, 14, 12)
                   : null,
               decoration: BoxDecoration(
-                color: bgTop.withOpacity(0.92),
+                color: bgTop.withValues(alpha: 0.92),
                 boxShadow: [
                   BoxShadow(
                     blurRadius: 16,
                     offset: const Offset(0, 8),
-                    color: Colors.black.withOpacity(0.06),
+                    color: Colors.black.withValues(alpha: 0.06),
                   ),
                 ],
               ),
@@ -322,8 +322,8 @@ class _MonthToDetailPageState extends State<MonthToDetailPage> {
                           labels[idx],
                           style: TextStyle(
                             color: isWeekend
-                                ? _subtext.withOpacity(0.9)
-                                : _subtext.withOpacity(0.95),
+                                ? _subtext.withValues(alpha: 0.9)
+                                : _subtext.withValues(alpha: 0.95),
                             fontWeight: FontWeight.w800,
                             fontSize: 12,
                             letterSpacing: 0.2,
@@ -414,7 +414,7 @@ class _ChevronButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white.withOpacity(0.55),
+      color: Colors.white.withValues(alpha: 0.55),
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
@@ -424,7 +424,7 @@ class _ChevronButton extends StatelessWidget {
           height: 34,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: _stroke.withOpacity(0.85)),
+            border: Border.all(color: _stroke.withValues(alpha: 0.85)),
           ),
           child: Icon(icon, color: _text),
         ),
@@ -449,7 +449,7 @@ class _SmallPillButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: _accent.withOpacity(0.12),
+      color: _accent.withValues(alpha: 0.12),
       borderRadius: BorderRadius.circular(999),
       child: InkWell(
         onTap: onTap,
@@ -458,7 +458,7 @@ class _SmallPillButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: _accent.withOpacity(0.35)),
+            border: Border.all(color: _accent.withValues(alpha: 0.35)),
           ),
           child: Row(
             children: [
@@ -504,17 +504,17 @@ class _DayCell extends StatelessWidget {
     final isOutside = state == _DayCellState.outside;
 
     final bg = isSelected
-        ? _accent.withOpacity(0.12)
-        : isToday
-        ? Colors.white.withOpacity(0.65)
-        : Colors.white.withOpacity(0.35);
+      ? _accent.withValues(alpha: 0.12)
+      : isToday
+      ? Colors.white.withValues(alpha: 0.65)
+      : Colors.white.withValues(alpha: 0.35);
 
     final border = isSelected
-        ? _accent.withOpacity(0.55)
-        : _stroke.withOpacity(0.75);
+        ? _accent.withValues(alpha: 0.55)
+        : _stroke.withValues(alpha: 0.75);
 
     final textColor = isOutside
-        ? _subtext.withOpacity(0.55)
+        ? _subtext.withValues(alpha: 0.55)
         : (isSelected ? _accent : _text);
 
     return Center(
@@ -569,7 +569,7 @@ class _MarkersRow extends StatelessWidget {
               width: 5,
               height: 5,
               decoration: BoxDecoration(
-                color: _accent.withOpacity(0.85),
+                color: _accent.withValues(alpha: 0.85),
                 shape: BoxShape.circle,
               ),
             ),

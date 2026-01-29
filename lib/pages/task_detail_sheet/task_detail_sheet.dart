@@ -73,8 +73,13 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
     setState(() => _saving = true);
     try {
       if (_task.rid == null) {
-        // obsłuż przypadek braku rid, jeśli potrzebne
-        print('Task has no recurrence ID; cannot override completion.');
+        TaskPattern? pattern = await widget.repo.getPatternById(_task.taskId);
+        if (pattern == null) return;
+        widget.repo.upsertPattern(
+          pattern.copyWith(
+            completion: _toggleCompletion(pattern.completion, value),
+          ),
+        );
         return;
       }
       TaskOverride override = TaskOverride(
@@ -93,7 +98,13 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
   Future<void> _onEdit() async {
     final pattern = await widget.repo.getPatternById(_task.taskId);
     if (pattern == null) return;
-    final scope = await showMoveScopeDialog(context);
+    RecurrenceMoveScope? scope;
+    if (pattern.rrule == null || _task.rid == null) {
+      scope = RecurrenceMoveScope.entireSeries;
+    } else {
+      scope = await showMoveScopeDialog(context);
+    }
+
     if (scope == null) return;
     switch (scope) {
       case RecurrenceMoveScope.singleOccurrence:
@@ -146,14 +157,14 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
       child: Container(
         margin: const EdgeInsets.fromLTRB(12, 12, 12, 12),
         decoration: BoxDecoration(
-          color: bgCard.withOpacity(0.96),
+          color: bgCard.withValues(alpha: 0.96),
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: stroke.withOpacity(0.95), width: 1.2),
+          border: Border.all(color: stroke.withValues(alpha: 0.95), width: 1.2),
           boxShadow: [
             BoxShadow(
               blurRadius: 18,
               offset: const Offset(0, 10),
-              color: Colors.black.withOpacity(0.10),
+              color: Colors.black.withValues(alpha: 0.10),
             ),
           ],
         ),
@@ -170,7 +181,7 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
                   width: 44,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.12),
+                    color: Colors.black.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
@@ -406,9 +417,9 @@ class _Card extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.60),
+        color: Colors.white.withValues(alpha: 0.60),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: stroke.withOpacity(0.85)),
+        border: Border.all(color: stroke.withValues(alpha: 0.85)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -467,10 +478,10 @@ class _TagPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: _TaskDetailsSheetState.accent.withOpacity(0.10),
+        color: _TaskDetailsSheetState.accent.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: _TaskDetailsSheetState.accent.withOpacity(0.30),
+          color: _TaskDetailsSheetState.accent.withValues(alpha: 0.30),
         ),
       ),
       child: Text(
@@ -496,10 +507,10 @@ class _PriorityBadge extends StatelessWidget {
       width: 44,
       height: 44,
       decoration: BoxDecoration(
-        color: _TaskDetailsSheetState.accent.withOpacity(0.10),
+        color: _TaskDetailsSheetState.accent.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _TaskDetailsSheetState.accent.withOpacity(0.35),
+          color: _TaskDetailsSheetState.accent.withValues(alpha: 0.35),
         ),
       ),
       child: Center(
@@ -567,7 +578,7 @@ class _PrimaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: _TaskDetailsSheetState.accent.withOpacity(0.12),
+      color: _TaskDetailsSheetState.accent.withValues(alpha: 0.12),
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
@@ -577,7 +588,7 @@ class _PrimaryButton extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: _TaskDetailsSheetState.accent.withOpacity(0.35),
+              color: _TaskDetailsSheetState.accent.withValues(alpha: 0.35),
             ),
           ),
           child: Row(
@@ -614,7 +625,7 @@ class _SecondaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white.withOpacity(0.55),
+      color: Colors.white.withValues(alpha: 0.55),
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
@@ -624,7 +635,7 @@ class _SecondaryButton extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: _TaskDetailsSheetState.stroke.withOpacity(0.85),
+              color: _TaskDetailsSheetState.stroke.withValues(alpha: 0.85),
             ),
           ),
           child: Row(

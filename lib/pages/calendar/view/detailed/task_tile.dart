@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:timecraft/model/drag_data.dart';
 import 'package:timecraft/model/task_instance.dart';
-import 'package:timecraft/model/task_pattern.dart';
-import 'package:timecraft/pages/add_task_sheet/add_task_multi_sheet.dart';
 import 'package:timecraft/pages/task_detail_sheet/task_detail_sheet.dart';
 import 'package:timecraft/repo/task_repo.dart';
 
@@ -155,7 +153,7 @@ class _TileBody extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.white.withOpacity(0.95),
+                  color: Colors.white.withValues(alpha: 0.95),
                 ),
                 softWrap: true,
               ),

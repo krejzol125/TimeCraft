@@ -99,7 +99,10 @@ class _SubtaskRow extends StatelessWidget {
           onPressed: onRemove,
           icon: Icon(
             Icons.close_rounded,
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.9),
+            color: Theme.of(context)
+                .colorScheme
+                .primary
+                .withValues(alpha: 0.9),
           ),
           splashRadius: 18,
         ),

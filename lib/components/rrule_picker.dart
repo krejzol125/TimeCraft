@@ -334,13 +334,22 @@ class _EndModeRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: sel
-                ? Theme.of(context).colorScheme.primary.withOpacity(0.10)
-                : Colors.white.withOpacity(0.55),
+              ? Theme.of(context)
+                .colorScheme
+                .primary
+                .withValues(alpha: 0.10)
+              : Colors.white.withValues(alpha: 0.55),
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
               color: sel
-                  ? Theme.of(context).colorScheme.primary.withOpacity(0.55)
-                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
+                ? Theme.of(context)
+                  .colorScheme
+                  .primary
+                  .withValues(alpha: 0.55)
+                : Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.15),
               width: 1.2,
             ),
           ),

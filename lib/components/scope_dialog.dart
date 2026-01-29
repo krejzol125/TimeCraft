@@ -24,7 +24,7 @@ Future<RecurrenceMoveScope?> showMoveScopeDialog(BuildContext context) {
               width: 38,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.12),
+                color: Colors.black.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(999),
               ),
             ),
@@ -108,7 +108,7 @@ class _ScopeOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white.withOpacity(0.6),
+      color: Colors.white.withValues(alpha: 0.6),
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -118,7 +118,7 @@ class _ScopeOption extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: const Color(0xFFB9BFCC).withOpacity(0.9),
+              color: const Color(0xFFB9BFCC).withValues(alpha: 0.9),
               width: 1.1,
             ),
           ),
@@ -128,10 +128,10 @@ class _ScopeOption extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1F4AA8).withOpacity(0.10),
+                  color: const Color(0xFF1F4AA8).withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: const Color(0xFF1F4AA8).withOpacity(0.35),
+                    color: const Color(0xFF1F4AA8).withValues(alpha: 0.35),
                   ),
                 ),
                 child: Icon(icon, color: const Color(0xFF1F4AA8)),

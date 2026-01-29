@@ -22,7 +22,7 @@ class UndatedDraggableTaskTile extends StatelessWidget {
       onDragStarted: onDragStartClose,
       feedback: const SizedBox.shrink(),
       childWhenDragging: Opacity(
-        opacity: 0.4,
+        alpha: 0.4,
         child: _UndatedDraggableTaskTileBody(task: task),
       ),
       child: _UndatedDraggableTaskTileBody(task: task),
