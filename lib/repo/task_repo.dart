@@ -19,6 +19,11 @@ class TaskRepo {
       _taskPatternDao = TaskPatternDao(db),
       _taskOverrideDao = TaskOverrideDao(db);
 
+  // ! Queries
+  Future<TaskPattern?> getPatternById(String id) async {
+    return _taskPatternDao.getPatternById(id);
+  }
+
   // ! Streams
 
   Stream<List<TaskInstance>> watchTasksInWindow(DateTime from, DateTime to) {
@@ -33,7 +38,7 @@ class TaskRepo {
 
   // ! Create
 
-  Future<void> createPattern(TaskPattern tp) async {
+  Future<void> upsertPattern(TaskPattern tp) async {
     await _taskPatternDao.upsertPattern(
       tp.copyWith(rev: DateTime.now().millisecondsSinceEpoch),
     );
@@ -46,10 +51,42 @@ class TaskRepo {
   // ! Update
 
   Future<void> overrideTask(TaskOverride to) async {
+    final existing = await _taskOverrideDao.getOverrideById(to.taskId, to.rid);
+    if (existing != null) {
+      to = existing.add(to);
+    }
     await _taskOverrideDao.upsertOverride(to);
     _taskPatternDao.markPatternDirty(
       to.taskId,
       DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  Future<void> splitPattern(
+    String taskId,
+    DateTime splitRid,
+    TaskPattern newPattern,
+  ) async {
+    TaskPattern? pattern = await _taskPatternDao.getPatternById(taskId);
+    if (pattern == null) return;
+    await _taskPatternDao.upsertPattern(
+      pattern.copyWith(
+        rrule: pattern.rrule?.copyWith(
+          count: null,
+          until: splitRid
+              .subtract(const Duration(seconds: 1))
+              .copyWith(isUtc: true),
+        ),
+        rev: DateTime.now().millisecondsSinceEpoch,
+        updatedAt: DateTime.now(),
+      ),
+    );
+    await _taskPatternDao.upsertPattern(
+      newPattern.copyWith(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        rev: DateTime.now().millisecondsSinceEpoch,
+        updatedAt: DateTime.now(),
+      ),
     );
   }
 
@@ -80,18 +117,19 @@ class TaskRepo {
     if (pattern == null) return;
     final startTime = pattern.startTime!.add(offset);
     if (pattern.rrule?.frequency == Frequency.weekly) {
-      List<ByWeekDayEntry> days = pattern.rrule?.byWeekDays ?? [];
+      Set<ByWeekDayEntry> days = pattern.rrule?.byWeekDays.toSet() ?? {};
       if (fromWeekday != null) {
         days.removeWhere((element) => element.day == fromWeekday);
         days.add(ByWeekDayEntry(startTime.weekday));
       } else {
-        days = [];
+        days = {};
       }
 
       final rrule = pattern.rrule!.copyWith(
-        byWeekDays: days,
+        byWeekDays: days.toList(),
         until: pattern.rrule?.until?.add(offset),
       );
+      print('new rule is $rrule');
 
       _taskPatternDao.upsertPattern(
         pattern.copyWith(
@@ -104,7 +142,7 @@ class TaskRepo {
       );
       return;
     }
-    _taskPatternDao.upsertPattern(
+    await _taskPatternDao.upsertPattern(
       pattern.copyWith(
         startTime: startTime,
         duration: duration,
@@ -115,6 +153,12 @@ class TaskRepo {
         updatedAt: DateTime.now(),
       ),
     );
+    final overrides = await _taskOverrideDao.getOverridesForTask(taskId);
+    for (var ovr in overrides) {
+      await _taskOverrideDao.upsertOverride(
+        ovr.copyWith(rid: ovr.rid.add(offset)),
+      );
+    }
   }
 
   Future<void> rescheduleOneInstancePattern(
@@ -149,7 +193,7 @@ class TaskRepo {
     await _taskPatternDao.upsertPattern(
       pattern.copyWith(
         rrule: pattern.rrule?.copyWith(
-          until: pattern.rrule?.until != null
+          until: pattern.rrule?.count == null
               ? splitRid
                     .subtract(const Duration(seconds: 1))
                     .copyWith(isUtc: true)

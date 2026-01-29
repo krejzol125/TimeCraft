@@ -18,6 +18,13 @@ class TaskOverrideDao extends DatabaseAccessor<LocalDB>
     );
   }
 
+  Future<TaskOverride?> getOverrideById(String taskId, DateTime rid) async {
+    return (select(taskOverrides)
+          ..where((tbl) => tbl.taskId.equals(taskId) & tbl.rid.equals(rid)))
+        .getSingleOrNull()
+        .then((row) => row != null ? TaskOverride.fromEntry(row) : null);
+  }
+
   Future<void> upsertOverride(TaskOverride override) async {
     await into(taskOverrides).insertOnConflictUpdate(override.toCompanion());
   }

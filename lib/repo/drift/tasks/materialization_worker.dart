@@ -99,7 +99,11 @@ class MaterializationWorker {
 
   Future<void> _rematerializeTask(String taskId) async {
     TaskPattern? pattern = await _taskPatternDao.getPatternById(taskId);
-    if (pattern == null || pattern.deleted) return;
+    if (pattern == null) return;
+    if (pattern.deleted) {
+      await _taskInstanceDao.replaceInstancesForPattern(taskId, []);
+      return;
+    }
     List<TaskOverride> overrides = await _taskOverrideDao.getOverridesForTask(
       taskId,
     );
@@ -158,23 +162,26 @@ class MaterializationWorker {
       includeAfter: true,
       includeBefore: true,
     );
-    List<TaskInstance> instances = materializedDates.map((dt) {
-      TaskOverride? override =
-          overrideMap[dt.copyWith(isUtc: false).toIso8601String()];
-      if (override != null) {
-        print(
-          'Applying override ${override.rid} for pattern ${pattern.title} at ${dt.copyWith(isUtc: false)}',
-        );
-      }
-      print(
-        'Materializing instance for pattern ${pattern.title} at ${dt.copyWith(isUtc: false)}',
-      );
-      return TaskInstance.fromPattern(
-        pattern,
-        dt.copyWith(isUtc: false),
-        taskOverride: override,
-      );
-    }).toList();
+    List<TaskInstance> instances = materializedDates
+        .map((dt) {
+          TaskOverride? override =
+              overrideMap[dt.copyWith(isUtc: false).toIso8601String()];
+          if (override != null) {
+            print(
+              'Applying override ${override.rid} for pattern ${pattern.title} at ${dt.copyWith(isUtc: false)}',
+            );
+          }
+          print(
+            'Materializing instance for pattern ${pattern.title} at ${dt.copyWith(isUtc: false)}',
+          );
+          return TaskInstance.fromPattern(
+            pattern,
+            dt.copyWith(isUtc: false),
+            taskOverride: override,
+          );
+        })
+        .where((t) => t.deleted == false)
+        .toList();
     await _taskInstanceDao.replaceInstancesForPattern(taskId, instances);
   }
 }

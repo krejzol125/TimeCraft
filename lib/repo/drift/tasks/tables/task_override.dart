@@ -20,7 +20,7 @@ class TaskOverrides extends Table {
   TextColumn get reminders => text().nullable()();
   TextColumn get subTasks => text().nullable()();
 
-  BoolColumn get deleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get deleted => boolean().nullable()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();

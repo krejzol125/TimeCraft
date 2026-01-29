@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:timecraft/model/completion.dart';
 import 'package:timecraft/model/noti_reminder.dart';
 import 'package:rrule/rrule.dart';
+import 'package:timecraft/model/task_override.dart';
 import 'package:timecraft/repo/drift/local_db.dart';
 
 class TaskPattern {
@@ -114,6 +115,27 @@ class TaskPattern {
       rev = entry.rev,
       createdAt = entry.createdAt,
       updatedAt = entry.updatedAt;
+
+  TaskOverride differenceFrom(TaskPattern pattern, DateTime rid) {
+    return TaskOverride(
+      taskId: id,
+      rid: rid,
+      title: title != pattern.title ? title : null,
+      completion: completion != pattern.completion ? completion : null,
+      description: description != pattern.description ? description : null,
+      startTime: startTime != pattern.startTime ? startTime : null,
+      duration: duration != pattern.duration ? duration : null,
+      tags: tags != pattern.tags ? tags : null,
+      priority: priority != pattern.priority ? priority : null,
+      reminders: reminders != pattern.reminders ? reminders : null,
+      subTasks: subTasks != pattern.subTasks
+          ? subTasks.map((e) => (e, false)).toList()
+          : null,
+      deleted: deleted != pattern.deleted ? deleted : false,
+      createdAt: createdAt,
+      updatedAt: DateTime.now(),
+    );
+  }
 
   TaskPatternsCompanion toCompanion() {
     return TaskPatternsCompanion(

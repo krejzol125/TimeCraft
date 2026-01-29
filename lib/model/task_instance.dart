@@ -26,8 +26,11 @@ class TaskInstance {
   List<NotiReminder> reminders;
   List<(String name, bool completed)> subTasks;
 
+  bool deleted = false;
+
   TaskInstance({
     required this.taskId,
+    this.rid,
     required this.title,
     Completion? completion,
     this.description = '',
@@ -38,6 +41,7 @@ class TaskInstance {
     this.priority = 3,
     this.reminders = const [],
     this.subTasks = const [],
+    this.deleted = false,
   }) : completion = completion ?? BinaryCompletion(false);
 
   TaskInstance.fromPattern(
@@ -57,10 +61,12 @@ class TaskInstance {
        reminders = taskOverride?.reminders ?? tp.reminders,
        subTasks =
            taskOverride?.subTasks ??
-           tp.subTasks.map((name) => (name, false)).toList();
+           tp.subTasks.map((name) => (name, false)).toList(),
+       deleted = taskOverride?.deleted ?? false;
 
   TaskInstance copyWith({
     String? taskId,
+    DateTime? rid,
     String? title,
     Completion? completion,
     String? description,
@@ -71,9 +77,11 @@ class TaskInstance {
     int? priority,
     List<NotiReminder>? reminders,
     List<(String name, bool completed)>? subTasks,
+    bool? deleted,
   }) {
     return TaskInstance(
       taskId: taskId ?? this.taskId,
+      rid: rid ?? this.rid,
       title: title ?? this.title,
       completion: completion ?? this.completion,
       description: description ?? this.description,
@@ -84,6 +92,7 @@ class TaskInstance {
       priority: priority ?? this.priority,
       reminders: reminders ?? this.reminders,
       subTasks: subTasks ?? this.subTasks,
+      deleted: deleted ?? this.deleted,
     );
   }
 
@@ -113,7 +122,8 @@ class TaskInstance {
               return (parts[0], parts[1].toLowerCase() == 'true');
             }).toList()
           : [],
-      rid = entry.rid;
+      rid = entry.rid,
+      deleted = entry.deleted;
 
   TaskInstancesCompanion toCompanion() {
     return TaskInstancesCompanion.insert(
@@ -128,7 +138,7 @@ class TaskInstance {
       priority: Value(priority),
       reminders: Value(reminders.map((e) => e.toJson()).join(';')),
       subTasks: Value(subTasks.map((e) => "${e.$1},${e.$2}").join(';')),
-      deleted: Value(false),
+      deleted: Value(deleted),
       rid: Value(rid),
     );
   }

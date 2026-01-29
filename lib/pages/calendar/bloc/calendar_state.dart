@@ -1,25 +1,31 @@
 import 'package:timecraft/model/task_instance.dart';
 
+enum CalendarViewMode { day, week }
+
 class CalendarState {
   final DateTime fromUtc;
-  final DateTime toUtc; // TODO to będzie getter w zależności od tydzień/miesiąc
+  DateTime get toUtc => fromUtc.add(Duration(days: 31));
+  final DateTime selectedUtc;
   final List<TaskInstance> tasks;
   final bool loading;
+  final CalendarViewMode viewMode;
   final String? error;
 
   const CalendarState({
     required this.fromUtc,
-    required this.toUtc,
+    required this.selectedUtc,
     required this.tasks,
+    required this.viewMode,
     this.loading = false,
     this.error,
   });
 
-  factory CalendarState.initial(DateTime fromUtc, DateTime toUtc) {
+  factory CalendarState.initial(DateTime fromUtc) {
     return CalendarState(
       fromUtc: fromUtc,
-      toUtc: toUtc,
+      selectedUtc: fromUtc,
       tasks: const [],
+      viewMode: CalendarViewMode.week,
       loading: false,
       error: null,
     );
@@ -27,15 +33,17 @@ class CalendarState {
 
   CalendarState copyWith({
     DateTime? fromUtc,
-    DateTime? toUtc,
+    DateTime? selectedUtc,
     List<TaskInstance>? tasks,
+    CalendarViewMode? viewMode,
     bool? loading,
     String? error,
   }) {
     return CalendarState(
       fromUtc: fromUtc ?? this.fromUtc,
-      toUtc: toUtc ?? this.toUtc,
+      selectedUtc: selectedUtc ?? this.selectedUtc,
       tasks: tasks ?? this.tasks,
+      viewMode: viewMode ?? this.viewMode,
       loading: loading ?? this.loading,
       error: error ?? this.error,
     );

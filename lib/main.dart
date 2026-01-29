@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:timecraft/pages/week_calendar/bloc/calendar_cubit.dart';
+import 'package:timecraft/pages/calendar/bloc/calendar_cubit.dart';
 import 'package:timecraft/repo/drift/local_db.dart';
 import 'package:timecraft/repo/drift/tasks/materialization_worker.dart';
 import 'package:timecraft/repo/task_repo.dart';
-import 'package:timecraft/pages/app_view/view/main_view.dart';
+import 'package:timecraft/pages/app_view/main_view.dart';
 
 void main() async {
   // LocalDB db = LocalDB();
@@ -37,7 +37,6 @@ class MyApp extends StatelessWidget {
             value: CalendarCubit(
               repo: context.read<TaskRepo>(),
               initialFromUtc: _thisWeekStart(),
-              initialToUtc: _thisWeekStart().add(Duration(days: 7)),
             ),
             child: MainView(),
           ),

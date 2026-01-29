@@ -15,21 +15,44 @@ import 'package:timecraft/system_design/tc_radio_button.dart';
 class AddTaskSheetMultiStep extends StatefulWidget {
   const AddTaskSheetMultiStep({
     super.key,
-    required this.onSubmit,
     this.initialStart,
     this.initialEnd,
+    this.initialPattern,
   });
-
-  final void Function(TaskPattern result) onSubmit;
 
   final DateTime? initialStart;
   final DateTime? initialEnd;
+  final TaskPattern? initialPattern;
+
+  static Future<TaskPattern?> show(
+    BuildContext context, {
+    DateTime? initialStart,
+    DateTime? initialEnd,
+    TaskPattern? initialPattern,
+  }) async {
+    return await showModalBottomSheet<TaskPattern>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => AddTaskSheetMultiStep(
+        initialStart: initialStart,
+        initialEnd: initialEnd,
+        initialPattern: initialPattern,
+      ),
+    );
+  }
 
   @override
   State<AddTaskSheetMultiStep> createState() => _AddTaskSheetMultiStepState();
 }
 
 class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
+  static const bgCard = Color(0xFFF6F7FB);
+  static const stroke = Color(0xFFB9BFCC);
+  static const text = Color(0xFF111827);
+  static const subtext = Color(0xFF6B7280);
+  static const accent = Color(0xFF1F4AA8);
   int _step = 0;
 
   String _raw = '';
@@ -50,7 +73,6 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
   RecurrenceRule? _rrule;
 
   _CompletionMode _completionMode = _CompletionMode.binary;
-  bool _binaryDone = false;
 
   final _targetCtrl = TextEditingController(text: '10');
   final _unitCtrl = TextEditingController(text: 'pages');
@@ -58,8 +80,28 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
   @override
   void initState() {
     super.initState();
-    _startLocal = widget.initialStart;
-    _endLocal = widget.initialEnd;
+    _startLocal = widget.initialPattern?.startTime ?? widget.initialStart;
+    _endLocal = widget.initialPattern?.endTime ?? widget.initialEnd;
+    if (widget.initialPattern != null) {
+      final pattern = widget.initialPattern!;
+      _raw = pattern.title + ' ' + (pattern.tags.map((e) => '#$e').join(' '));
+      _title = pattern.title;
+      _tags = pattern.tags;
+      _descCtrl.text = pattern.description;
+      _priority = pattern.priority;
+      _subtasks.addAll(pattern.subTasks);
+      if (pattern.rrule != null) {
+        repeating = true;
+        _rrule = pattern.rrule;
+      }
+      if (pattern.completion is BinaryCompletion) {
+        _completionMode = _CompletionMode.binary;
+      } else if (pattern.completion is QuantityCompletion) {
+        _completionMode = _CompletionMode.quantitative;
+        final qc = pattern.completion as QuantityCompletion;
+        _targetCtrl.text = qc.cap.toString();
+      }
+    }
   }
 
   @override
@@ -118,7 +160,8 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
 
     final completion = _buildCompletion();
 
-    final id = DateTime.now().millisecondsSinceEpoch;
+    final id =
+        widget.initialPattern?.id ?? DateTime.now().millisecondsSinceEpoch;
 
     final task = TaskPattern(
       id: id.toString(),
@@ -136,8 +179,8 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
       subTasks: List.of(_subtasks),
     );
 
-    widget.onSubmit(task);
-    Navigator.of(context).maybePop();
+    //widget.onSubmit(task);
+    Navigator.of(context).maybePop(task);
   }
 
   @override
@@ -147,13 +190,22 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
     return AnimatedPadding(
       duration: const Duration(milliseconds: 200),
       padding: EdgeInsets.only(bottom: viewInsets.bottom),
-      child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: SafeArea(
-          top: false,
+      child: SafeArea(
+        top: false,
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+          decoration: BoxDecoration(
+            color: bgCard.withOpacity(0.96),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: stroke.withOpacity(0.95), width: 1.2),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 18,
+                offset: const Offset(0, 10),
+                color: Colors.black.withOpacity(0.10),
+              ),
+            ],
+          ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
             child: Column(
@@ -172,8 +224,18 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
                         ),
                       ),
                     ),
+                    if (widget.initialPattern != null)
+                      IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          Navigator.of(context).maybePop<TaskPattern>(
+                            widget.initialPattern!.copyWith(deleted: true),
+                          );
+                        },
+                      ),
                     IconButton(
-                      onPressed: () => Navigator.of(context).maybePop(),
+                      onPressed: () =>
+                          Navigator.of(context).maybePop<TaskPattern>(null),
                       icon: const Icon(Icons.close, color: Colors.black),
                       splashRadius: 22,
                     ),
@@ -201,7 +263,9 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
                       child: TcButton(
                         outlined: true,
                         onTap: _step == 0
-                            ? () => Navigator.of(context).maybePop()
+                            ? () => Navigator.of(
+                                context,
+                              ).maybePop<TaskPattern>(null)
                             : _back,
                         child: Text(
                           _step == 0 ? 'Cancel' : 'Back',
@@ -291,8 +355,6 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
           key: const ValueKey('step2'),
           mode: _completionMode,
           onModeChanged: (m) => setState(() => _completionMode = m),
-          binaryDone: _binaryDone,
-          onBinaryChanged: (v) => setState(() => _binaryDone = v),
           targetCtrl: _targetCtrl,
           unitCtrl: _unitCtrl,
         );
@@ -523,17 +585,12 @@ class _StepCompletion extends StatelessWidget {
     super.key,
     required this.mode,
     required this.onModeChanged,
-    required this.binaryDone,
-    required this.onBinaryChanged,
     required this.targetCtrl,
     required this.unitCtrl,
   });
 
   final _CompletionMode mode;
   final ValueChanged<_CompletionMode> onModeChanged;
-
-  final bool binaryDone;
-  final ValueChanged<bool> onBinaryChanged;
 
   final TextEditingController targetCtrl;
   final TextEditingController unitCtrl;

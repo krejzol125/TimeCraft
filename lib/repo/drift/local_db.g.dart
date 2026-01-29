@@ -1939,13 +1939,12 @@ class $TaskOverridesTable extends TaskOverrides
   late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
     'deleted',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'CHECK ("deleted" IN (0, 1))',
     ),
-    defaultValue: const Constant(false),
   );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
@@ -2158,7 +2157,7 @@ class $TaskOverridesTable extends TaskOverrides
       deleted: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}deleted'],
-      )!,
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -2190,7 +2189,7 @@ class TaskOverrideEntry extends DataClass
   final int? priority;
   final String? reminders;
   final String? subTasks;
-  final bool deleted;
+  final bool? deleted;
   final DateTime createdAt;
   final DateTime updatedAt;
   const TaskOverrideEntry({
@@ -2206,7 +2205,7 @@ class TaskOverrideEntry extends DataClass
     this.priority,
     this.reminders,
     this.subTasks,
-    required this.deleted,
+    this.deleted,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -2245,7 +2244,9 @@ class TaskOverrideEntry extends DataClass
     if (!nullToAbsent || subTasks != null) {
       map['sub_tasks'] = Variable<String>(subTasks);
     }
-    map['deleted'] = Variable<bool>(deleted);
+    if (!nullToAbsent || deleted != null) {
+      map['deleted'] = Variable<bool>(deleted);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -2283,7 +2284,9 @@ class TaskOverrideEntry extends DataClass
       subTasks: subTasks == null && nullToAbsent
           ? const Value.absent()
           : Value(subTasks),
-      deleted: Value(deleted),
+      deleted: deleted == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deleted),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -2307,7 +2310,7 @@ class TaskOverrideEntry extends DataClass
       priority: serializer.fromJson<int?>(json['priority']),
       reminders: serializer.fromJson<String?>(json['reminders']),
       subTasks: serializer.fromJson<String?>(json['subTasks']),
-      deleted: serializer.fromJson<bool>(json['deleted']),
+      deleted: serializer.fromJson<bool?>(json['deleted']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -2328,7 +2331,7 @@ class TaskOverrideEntry extends DataClass
       'priority': serializer.toJson<int?>(priority),
       'reminders': serializer.toJson<String?>(reminders),
       'subTasks': serializer.toJson<String?>(subTasks),
-      'deleted': serializer.toJson<bool>(deleted),
+      'deleted': serializer.toJson<bool?>(deleted),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -2347,7 +2350,7 @@ class TaskOverrideEntry extends DataClass
     Value<int?> priority = const Value.absent(),
     Value<String?> reminders = const Value.absent(),
     Value<String?> subTasks = const Value.absent(),
-    bool? deleted,
+    Value<bool?> deleted = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => TaskOverrideEntry(
@@ -2363,7 +2366,7 @@ class TaskOverrideEntry extends DataClass
     priority: priority.present ? priority.value : this.priority,
     reminders: reminders.present ? reminders.value : this.reminders,
     subTasks: subTasks.present ? subTasks.value : this.subTasks,
-    deleted: deleted ?? this.deleted,
+    deleted: deleted.present ? deleted.value : this.deleted,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -2465,7 +2468,7 @@ class TaskOverridesCompanion extends UpdateCompanion<TaskOverrideEntry> {
   final Value<int?> priority;
   final Value<String?> reminders;
   final Value<String?> subTasks;
-  final Value<bool> deleted;
+  final Value<bool?> deleted;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -2557,7 +2560,7 @@ class TaskOverridesCompanion extends UpdateCompanion<TaskOverrideEntry> {
     Value<int?>? priority,
     Value<String?>? reminders,
     Value<String?>? subTasks,
-    Value<bool>? deleted,
+    Value<bool?>? deleted,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -4182,7 +4185,7 @@ typedef $$TaskOverridesTableCreateCompanionBuilder =
       Value<int?> priority,
       Value<String?> reminders,
       Value<String?> subTasks,
-      Value<bool> deleted,
+      Value<bool?> deleted,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -4201,7 +4204,7 @@ typedef $$TaskOverridesTableUpdateCompanionBuilder =
       Value<int?> priority,
       Value<String?> reminders,
       Value<String?> subTasks,
-      Value<bool> deleted,
+      Value<bool?> deleted,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -4560,7 +4563,7 @@ class $$TaskOverridesTableTableManager
                 Value<int?> priority = const Value.absent(),
                 Value<String?> reminders = const Value.absent(),
                 Value<String?> subTasks = const Value.absent(),
-                Value<bool> deleted = const Value.absent(),
+                Value<bool?> deleted = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -4596,7 +4599,7 @@ class $$TaskOverridesTableTableManager
                 Value<int?> priority = const Value.absent(),
                 Value<String?> reminders = const Value.absent(),
                 Value<String?> subTasks = const Value.absent(),
-                Value<bool> deleted = const Value.absent(),
+                Value<bool?> deleted = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),

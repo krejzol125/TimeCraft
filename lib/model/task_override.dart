@@ -24,7 +24,7 @@ class TaskOverride {
   List<NotiReminder>? reminders;
   List<(String name, bool completed)>? subTasks;
 
-  bool deleted = false;
+  bool? deleted = false;
 
   DateTime createdAt;
   DateTime updatedAt;
@@ -149,23 +149,19 @@ class TaskOverride {
     );
   }
 
-  TaskOverride addTo(TaskOverride? override) {
+  TaskOverride add(TaskOverride? override) {
     if (override == null) return this;
-    return TaskOverride(
-      taskId: taskId,
-      rid: rid,
-      title: title ?? override.title,
-      completion: completion ?? override.completion,
-      description: description ?? override.description,
-      startTime: startTime ?? override.startTime,
-      duration: duration ?? override.duration,
-      tags: tags ?? override.tags,
-      priority: priority ?? override.priority,
-      reminders: reminders ?? override.reminders,
-      subTasks: subTasks ?? override.subTasks,
-      deleted: deleted,
-      createdAt: override.createdAt,
-      updatedAt: DateTime.now(),
-    );
+    if (override.title != null) title = override.title;
+    if (override.completion != null) completion = override.completion;
+    if (override.description != null) description = override.description;
+    if (override.startTime != null) startTime = override.startTime;
+    if (override.duration != null) duration = override.duration;
+    if (override.tags != null) tags = override.tags;
+    if (override.priority != null) priority = override.priority;
+    if (override.reminders != null) reminders = override.reminders;
+    if (override.subTasks != null) subTasks = override.subTasks;
+    if (override.deleted != null) deleted = override.deleted;
+    updatedAt = DateTime.now();
+    return this;
   }
 }
