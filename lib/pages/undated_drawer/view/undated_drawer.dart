@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:timecraft/l10n/app_localizations.dart';
 import 'package:timecraft/model/task_instance.dart';
 import 'package:timecraft/pages/undated_drawer/view/undated_task_draggable_tile.dart';
 
@@ -10,6 +11,7 @@ class UndatedDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     return SafeArea(
       child: SizedBox(
@@ -30,17 +32,20 @@ class UndatedDrawer extends StatelessWidget {
                     end: Alignment.bottomRight,
                   ),
                 ),
-                child: const Align(
+                child: Align(
                   alignment: Alignment.bottomLeft,
                   child: Text(
-                    'Undated tasks',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                    l10n.undatedTasks,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ),
               Expanded(
                 child: undated.isEmpty
-                    ? const Center(child: Text('No undated tasks'))
+                    ? Center(child: Text(l10n.noUndatedTasks))
                     : ListView.separated(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,

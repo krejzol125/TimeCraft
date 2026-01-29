@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:timecraft/l10n/app_localizations.dart';
 
 enum RecurrenceMoveScope { singleOccurrence, thisAndFuture, entireSeries }
 
@@ -9,6 +10,7 @@ Future<RecurrenceMoveScope?> showMoveScopeDialog(BuildContext context) {
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
     builder: (ctx) {
+      final l10n = AppLocalizations.of(ctx)!;
       return Container(
         margin: const EdgeInsets.all(12),
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
@@ -29,14 +31,14 @@ Future<RecurrenceMoveScope?> showMoveScopeDialog(BuildContext context) {
               ),
             ),
             const SizedBox(height: 12),
-            const Row(
+            Row(
               children: [
-                Icon(Icons.repeat_rounded, color: Color(0xFF111827)),
-                SizedBox(width: 10),
+                const Icon(Icons.repeat_rounded, color: Color(0xFF111827)),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Move recurring task',
-                    style: TextStyle(
+                    l10n.moveRecurringTask,
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w900,
                       color: Color(0xFF111827),
@@ -47,7 +49,7 @@ Future<RecurrenceMoveScope?> showMoveScopeDialog(BuildContext context) {
             ),
             const SizedBox(height: 8),
             Text(
-              'What do you want to move?',
+              l10n.moveWhat,
               style: TextStyle(
                 color: const Color(0xFF6B7280),
                 fontWeight: FontWeight.w600,
@@ -57,24 +59,24 @@ Future<RecurrenceMoveScope?> showMoveScopeDialog(BuildContext context) {
 
             _ScopeOption(
               icon: Icons.looks_one_rounded,
-              title: 'Only this occurrence',
-              subtitle: 'Move just the one you dragged.',
+              title: l10n.scopeOnlyThis,
+              subtitle: l10n.scopeOnlyThisSubtitle,
               onTap: () =>
                   Navigator.of(ctx).pop(RecurrenceMoveScope.singleOccurrence),
             ),
             const SizedBox(height: 8),
             _ScopeOption(
               icon: Icons.forward_rounded,
-              title: 'This and future',
-              subtitle: 'Move this occurrence and all after it.',
+              title: l10n.scopeThisAndFuture,
+              subtitle: l10n.scopeThisAndFutureSubtitle,
               onTap: () =>
                   Navigator.of(ctx).pop(RecurrenceMoveScope.thisAndFuture),
             ),
             const SizedBox(height: 8),
             _ScopeOption(
               icon: Icons.all_inclusive_rounded,
-              title: 'Entire series',
-              subtitle: 'Shift every occurrence in this series.',
+              title: l10n.scopeEntireSeries,
+              subtitle: l10n.scopeEntireSeriesSubtitle,
               onTap: () =>
                   Navigator.of(ctx).pop(RecurrenceMoveScope.entireSeries),
             ),

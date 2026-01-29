@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:timecraft/l10n/app_localizations.dart';
 import 'package:timecraft/model/task_instance.dart';
 import 'package:timecraft/model/task_pattern.dart';
 import 'package:timecraft/pages/add_task_sheet/add_task_multi_sheet.dart';
@@ -10,23 +11,32 @@ import 'package:timecraft/pages/undated_drawer/view/undated_drawer.dart';
 import 'package:timecraft/repo/task_repo.dart';
 
 class MainView extends StatelessWidget {
-  MainView({super.key});
+  MainView({super.key, required this.onToggleLocale});
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final VoidCallback onToggleLocale;
   @override
   Widget build(BuildContext context1) {
     final Color bgTop = const Color(0xFFeef4ff);
+    final strings = AppLocalizations.of(context1)!;
     return BlocBuilder<CalendarCubit, CalendarState>(
       builder: (context, state) {
         //print('Rebuilding MainView with ${state.tasks.length} tasks');
         return Scaffold(
           key: _scaffoldKey,
           appBar: AppBar(
-            title: const Text('WeekCraft'),
+            title: Text(strings.appTitle),
             backgroundColor: bgTop,
-            leading: IconButton(
-              tooltip: 'Account',
-              onPressed: () {},
-              icon: const Icon(Icons.account_circle_rounded),
+            leading: SizedBox(
+              width: 86,
+              child: Center(
+                child: Tooltip(
+                  message: strings.languageToggle,
+                  child: IconButton(
+                    icon: Icon(Icons.language),
+                    onPressed: () => onToggleLocale(),
+                  ),
+                ),
+              ),
             ),
 
             actions: [
@@ -57,7 +67,7 @@ class MainView extends StatelessWidget {
               //   },
               // ),
               IconButton(
-                tooltip: 'Undated tasks',
+                tooltip: strings.undatedTasks,
                 onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
                 icon: const Icon(Icons.inbox_outlined),
               ),
@@ -102,7 +112,7 @@ class MainView extends StatelessWidget {
           ),
           floatingActionButton: FloatingActionButton.extended(
             icon: const Icon(Icons.add),
-            label: const Text('New Task'),
+            label: Text(strings.newTask),
             onPressed: () async {
               TaskPattern? pattern = await AddTaskSheetMultiStep.show(context);
               if (pattern != null) {

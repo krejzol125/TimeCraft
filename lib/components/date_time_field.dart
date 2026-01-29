@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:timecraft/l10n/app_localizations.dart';
 import 'package:timecraft/system_design/tc_input_decorator.dart';
 
 class DateTimeField extends StatelessWidget {
@@ -21,7 +22,8 @@ class DateTimeField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = value != null ? timeToString(value!) : 'Not set';
+    final l10n = AppLocalizations.of(context)!;
+    final text = value != null ? timeToString(value!) : l10n.dateTimeNotSet;
     return InkWell(
       onTap: () {
         _pickDateTime(context, initial: value).then((dt) {

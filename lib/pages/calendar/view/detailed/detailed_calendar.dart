@@ -1,14 +1,13 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:timecraft/l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:timecraft/model/drag_data.dart';
 import 'package:timecraft/model/task_instance.dart';
-import 'package:timecraft/model/task_pattern.dart';
 import 'package:timecraft/pages/calendar/bloc/calendar_cubit.dart';
 import 'package:timecraft/pages/calendar/bloc/calendar_state.dart';
 import 'package:timecraft/pages/calendar/view/detailed/day_column.dart';
-import 'package:timecraft/pages/task_detail_sheet/task_detail_sheet.dart';
 import 'package:timecraft/repo/task_repo.dart';
 
 class DetailedCalendar extends StatefulWidget {
@@ -49,6 +48,27 @@ class DetailedCalendar extends StatefulWidget {
 
 class _DetailedCalendarState extends State<DetailedCalendar> {
   _DetailedCalendarState();
+
+  String _weekdayLabel(AppLocalizations l10n, int index) {
+    switch (index) {
+      case 0:
+        return l10n.weekdayMonShort;
+      case 1:
+        return l10n.weekdayTueShort;
+      case 2:
+        return l10n.weekdayWedShort;
+      case 3:
+        return l10n.weekdayThuShort;
+      case 4:
+        return l10n.weekdayFriShort;
+      case 5:
+        return l10n.weekdaySatShort;
+      case 6:
+        return l10n.weekdaySunShort;
+      default:
+        return l10n.weekdayMonShort;
+    }
+  }
 
   @override
   void initState() {
@@ -335,11 +355,13 @@ class _DetailedCalendarState extends State<DetailedCalendar> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final Color bgTop = const Color(0xFFeef4ff);
     final Color bgBottom = const Color(0xFFdce7ff);
     final byDay = tasksByDay();
     final selectedDayIndex = widget.calendarStartDate.weekday - 1;
-    final selectedDay = DetailedCalendar.weekdays[selectedDayIndex];
+    final selectedDayKey = DetailedCalendar.weekdays[selectedDayIndex];
+    final selectedDayLabel = _weekdayLabel(l10n, selectedDayIndex);
 
     return Listener(
       onPointerSignal: _onPointerSignal,
@@ -371,7 +393,7 @@ class _DetailedCalendarState extends State<DetailedCalendar> {
                     : Column(
                         children: [
                           Text(
-                            selectedDay,
+                            selectedDayLabel,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -493,18 +515,18 @@ class _DetailedCalendarState extends State<DetailedCalendar> {
                                 }).toList(),
                               )
                             : DayColumn(
-                                day: selectedDay,
-                                dayKey: dayKeys[selectedDay]!,
+                                day: selectedDayKey,
+                                dayKey: dayKeys[selectedDayKey]!,
                                 dayStart: widget.calendarStartDate,
                                 halfHourHeight: _halfHourHeight,
                                 pixelsPerMinute: _pixelsPerMinute,
-                                tasksForDay: byDay[selectedDay]!,
+                                tasksForDay: byDay[selectedDayKey]!,
                                 ghost: _ghost,
 
                                 onMoveGhost: _updateGhost,
                                 onLeaveGhost: () {
                                   final g = _ghost.value;
-                                  if (g != null && g.day == selectedDay) {
+                                  if (g != null && g.day == selectedDayKey) {
                                     _ghost.value = null;
                                   }
                                 },

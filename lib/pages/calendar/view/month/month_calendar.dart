@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:timecraft/l10n/app_localizations.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:timecraft/model/task_instance.dart';
 import 'package:timecraft/pages/calendar/bloc/calendar_state.dart';
@@ -124,20 +125,20 @@ class _MonthToDetailPageState extends State<MonthToDetailPage> {
     });
   }
 
-  String _monthLabel(DateTime d) {
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
+  String _monthLabel(AppLocalizations l10n, DateTime d) {
+    final months = [
+      l10n.monthJanuary,
+      l10n.monthFebruary,
+      l10n.monthMarch,
+      l10n.monthApril,
+      l10n.monthMay,
+      l10n.monthJune,
+      l10n.monthJuly,
+      l10n.monthAugust,
+      l10n.monthSeptember,
+      l10n.monthOctober,
+      l10n.monthNovember,
+      l10n.monthDecember,
     ];
     return '${months[d.month - 1]} ${d.year}';
   }
@@ -145,6 +146,7 @@ class _MonthToDetailPageState extends State<MonthToDetailPage> {
   @override
   Widget build(BuildContext context) {
     final Color bgTop = const Color(0xFFeef4ff);
+    final l10n = AppLocalizations.of(context)!;
     return LayoutBuilder(
       builder: (context, c) {
         final width = c.maxWidth;
@@ -188,9 +190,9 @@ class _MonthToDetailPageState extends State<MonthToDetailPage> {
                   focusedDay: _focusedDay,
                   calendarFormat: _format,
 
-                  availableCalendarFormats: const {
-                    CalendarFormat.month: 'Month',
-                    CalendarFormat.week: 'Week',
+                  availableCalendarFormats: {
+                    CalendarFormat.month: l10n.calendarMonth,
+                    CalendarFormat.week: l10n.calendarWeek,
                   },
 
                   selectedDayPredicate: (day) =>
@@ -271,7 +273,7 @@ class _MonthToDetailPageState extends State<MonthToDetailPage> {
                                 Expanded(
                                   child: Center(
                                     child: Text(
-                                      _monthLabel(day),
+                                      _monthLabel(l10n, day),
                                       style: const TextStyle(
                                         color: _text,
                                         fontWeight: FontWeight.w900,
@@ -283,7 +285,7 @@ class _MonthToDetailPageState extends State<MonthToDetailPage> {
                                 if (_showDetail)
                                   _SmallPillButton(
                                     icon: Icons.calendar_month_rounded,
-                                    label: 'Month',
+                                    label: l10n.calendarMonth,
                                     onTap: _backToMonth,
                                   ),
                                 const SizedBox(width: 8),
@@ -303,14 +305,14 @@ class _MonthToDetailPageState extends State<MonthToDetailPage> {
                     },
 
                     dowBuilder: (context, day) {
-                      const labels = [
-                        'Mon',
-                        'Tue',
-                        'Wed',
-                        'Thu',
-                        'Fri',
-                        'Sat',
-                        'Sun',
+                      final labels = [
+                        l10n.weekdayMonShort,
+                        l10n.weekdayTueShort,
+                        l10n.weekdayWedShort,
+                        l10n.weekdayThuShort,
+                        l10n.weekdayFriShort,
+                        l10n.weekdaySatShort,
+                        l10n.weekdaySunShort,
                       ];
                       final idx = day.weekday - 1;
                       final isWeekend =
@@ -387,9 +389,10 @@ class _MonthHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Text(
-        'Kliknij dzień, żeby zobaczyć szczegóły.',
+        l10n.monthHint,
         style: TextStyle(
           color: Colors.blueGrey.shade700,
           fontWeight: FontWeight.w700,
@@ -504,10 +507,10 @@ class _DayCell extends StatelessWidget {
     final isOutside = state == _DayCellState.outside;
 
     final bg = isSelected
-      ? _accent.withValues(alpha: 0.12)
-      : isToday
-      ? Colors.white.withValues(alpha: 0.65)
-      : Colors.white.withValues(alpha: 0.35);
+        ? _accent.withValues(alpha: 0.12)
+        : isToday
+        ? Colors.white.withValues(alpha: 0.65)
+        : Colors.white.withValues(alpha: 0.35);
 
     final border = isSelected
         ? _accent.withValues(alpha: 0.55)

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:timecraft/l10n/app_localizations.dart';
 import 'package:timecraft/model/drag_data.dart';
 import 'package:timecraft/pages/calendar/view/detailed/task_tile.dart';
 
@@ -20,8 +21,9 @@ class GhostTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final timeLabel = '${timeToString(start)} - ${timeToString(end)}';
-    final modeLabel = mode == DragMode.move ? 'Przenoszenie' : 'Rozciąganie';
+    final modeLabel = mode == DragMode.move ? l10n.ghostMove : l10n.ghostResize;
 
     return Container(
       height: height,
@@ -46,7 +48,9 @@ class GhostTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.blueGrey.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.5)),
+                  border: Border.all(
+                    color: Colors.blueAccent.withValues(alpha: 0.5),
+                  ),
                 ),
                 child: Text(
                   timeLabel,

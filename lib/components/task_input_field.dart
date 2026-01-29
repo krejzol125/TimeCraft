@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:timecraft/l10n/app_localizations.dart';
 import 'package:timecraft/system_design/tc_fext_field.dart';
 
 class TaskInputParsed {
@@ -22,7 +23,7 @@ final RegExp _allowedTagChars = RegExp(r'^[a-z0-9_/-]+$');
 
 String _normTag(String t) => t.trim().toLowerCase();
 
-TaskInputParsed parseTaskInputAdvanced(String text) {
+TaskInputParsed parseTaskInputAdvanced(String text, AppLocalizations l10n) {
   final tags = <String>[];
   String? error;
 
@@ -30,14 +31,13 @@ TaskInputParsed parseTaskInputAdvanced(String text) {
     final token = (m.group(2) ?? '');
 
     if (token.isEmpty) {
-      error ??= 'Hashtag "#" must have a name (e.g. #work).';
+      error ??= l10n.tagErrorEmpty;
       continue;
     }
 
     final norm = _normTag(token);
     if (!_allowedTagChars.hasMatch(norm)) {
-      error ??=
-          'Tag "#$token" contains invalid characters. Allowed: a-z 0-9 _ / -';
+      error ??= l10n.tagErrorInvalid(token);
       continue;
     }
     tags.add(norm);
@@ -170,7 +170,10 @@ class _TaskInputAdvancedFieldState extends State<TaskInputAdvancedField> {
   }
 
   void _emitParsed() {
-    final parsed = parseTaskInputAdvanced(_controller.text);
+    final parsed = parseTaskInputAdvanced(
+      _controller.text,
+      AppLocalizations.of(context)!,
+    );
     setState(() => _errorText = parsed.error);
     widget.onChanged(parsed);
   }
@@ -307,6 +310,7 @@ class _TaskInputAdvancedFieldState extends State<TaskInputAdvancedField> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final tagButton = IconButton(
       onPressed: () {
         int cursorPos = _controller.selection.baseOffset;
@@ -324,7 +328,7 @@ class _TaskInputAdvancedFieldState extends State<TaskInputAdvancedField> {
         FocusScope.of(context).requestFocus(_focus);
       },
       icon: const Icon(Icons.tag),
-      tooltip: 'Add a tag',
+      tooltip: l10n.addTagTooltip,
       color: Theme.of(context).colorScheme.primary,
 
       //label: const Text('Tag'),
@@ -334,13 +338,13 @@ class _TaskInputAdvancedFieldState extends State<TaskInputAdvancedField> {
       link: _layerLink,
       child: TcTextField(
         controller: _controller,
-        labelText: 'Title',
+        labelText: l10n.titleLabel,
         leading: const Icon(Icons.task_alt_outlined),
         trailing: tagButton,
         focusNode: _focus,
         errorText: _errorText,
-        hintText: 'Np. Zrobić raport #work #pilne',
-        helperText: 'You can add hashtags like #work or #urgent.',
+        hintText: l10n.titleHint,
+        helperText: l10n.titleHelper,
       ),
     );
   }

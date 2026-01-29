@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:timecraft/l10n/app_localizations.dart';
 import 'package:rrule/rrule.dart';
 import 'package:timecraft/components/add_subtasks_field.dart';
 import 'package:timecraft/components/date_time_field.dart';
@@ -72,7 +73,8 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
   _CompletionMode _completionMode = _CompletionMode.binary;
 
   final _targetCtrl = TextEditingController(text: '10');
-  final _unitCtrl = TextEditingController(text: 'pages');
+  final _unitCtrl = TextEditingController();
+  bool _unitInitialized = false;
 
   @override
   void initState() {
@@ -102,6 +104,17 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_unitInitialized) return;
+    final l10n = AppLocalizations.of(context)!;
+    if (_unitCtrl.text.isEmpty) {
+      _unitCtrl.text = l10n.defaultUnit;
+    }
+    _unitInitialized = true;
+  }
+
+  @override
   void dispose() {
     _descCtrl.dispose();
     _targetCtrl.dispose();
@@ -110,9 +123,10 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
   }
 
   bool _validateStep(int step) {
+    final l10n = AppLocalizations.of(context)!;
     if (step == 0) {
       if (_title.isEmpty) {
-        _toast('Podaj tytuł.');
+        _toast(l10n.validationTitleRequired);
         return false;
       }
       return true;
@@ -121,7 +135,7 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
       if (_startLocal != null &&
           _endLocal != null &&
           !_endLocal!.isAfter(_startLocal!)) {
-        _toast('Koniec musi być po początku.');
+        _toast(l10n.validationEndAfterStart);
         return false;
       }
       return true;
@@ -182,6 +196,7 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final viewInsets = MediaQuery.of(context).viewInsets;
 
     return AnimatedPadding(
@@ -194,7 +209,10 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
           decoration: BoxDecoration(
             color: bgCard.withValues(alpha: 0.96),
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: stroke.withValues(alpha: 0.95), width: 1.2),
+            border: Border.all(
+              color: stroke.withValues(alpha: 0.95),
+              width: 1.2,
+            ),
             boxShadow: [
               BoxShadow(
                 blurRadius: 18,
@@ -216,10 +234,10 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
                   children: [
                     Row(
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            'Create Task',
-                            style: TextStyle(
+                            l10n.createTask,
+                            style: const TextStyle(
                               fontSize: 26,
                               fontWeight: FontWeight.w800,
                               color: Colors.black,
@@ -275,7 +293,7 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
                                         ).maybePop<TaskPattern>(null)
                                       : _back,
                                   child: Text(
-                                    _step == 0 ? 'Cancel' : 'Back',
+                                    _step == 0 ? l10n.cancel : l10n.back,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: Theme.of(
@@ -302,7 +320,7 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        _step == 2 ? 'Create' : 'Next',
+                                        _step == 2 ? l10n.create : l10n.next,
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: Theme.of(
@@ -392,7 +410,9 @@ class _StepHeader extends StatelessWidget {
     Widget chip(int idx, String label) {
       final active = idx == step;
       final done = idx < step;
-      final color = active ? Colors.black : Colors.black.withValues(alpha: 0.85);
+      final color = active
+          ? Colors.black
+          : Colors.black.withValues(alpha: 0.85);
       final bg = active
           ? Colors.black.withValues(alpha: 0.10)
           : Colors.white.withValues(alpha: 0.55);
@@ -448,11 +468,11 @@ class _StepHeader extends StatelessWidget {
 
     return Row(
       children: [
-        chip(0, 'Basics'),
+        chip(0, AppLocalizations.of(context)!.basics),
         const SizedBox(width: 8),
-        chip(1, 'Schedule'),
+        chip(1, AppLocalizations.of(context)!.schedule),
         const SizedBox(width: 8),
-        chip(2, 'Completion'),
+        chip(2, AppLocalizations.of(context)!.completion),
       ],
     );
   }
@@ -498,7 +518,7 @@ class _StepBasics extends StatelessWidget {
         TcTextField(
           controller: descCtrl,
           maxLines: 3,
-          labelText: 'Description',
+          labelText: AppLocalizations.of(context)!.description,
           leading: const Icon(Icons.description_outlined),
         ),
         const SizedBox(height: 12),
@@ -552,7 +572,7 @@ class _StepSchedule extends StatelessWidget {
           children: [
             Expanded(
               child: DateTimeField(
-                label: 'Start',
+                label: AppLocalizations.of(context)!.start,
                 value: startLocal,
                 onPick: onPickStart,
                 onClear: () => onPickStart(null),
@@ -561,7 +581,7 @@ class _StepSchedule extends StatelessWidget {
             const SizedBox(height: 12, width: 12),
             Expanded(
               child: DateTimeField(
-                label: 'End',
+                label: AppLocalizations.of(context)!.end,
                 value: endLocal,
                 onPick: onPickEnd,
                 onClear: () => onPickEnd(null),
@@ -613,7 +633,7 @@ class _StepCompletion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TcInputDecorator(
-      labelText: 'Completion',
+      labelText: AppLocalizations.of(context)!.completion,
       prefixIcon: const Icon(Icons.verified_outlined),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -654,7 +674,7 @@ class _ModeSegment extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Yes/No',
+                  AppLocalizations.of(context)!.yesNo,
                   style: TextStyle(
                     color: mode == _CompletionMode.binary
                         ? Theme.of(context).colorScheme.primary
@@ -678,12 +698,12 @@ class _ModeSegment extends StatelessWidget {
                   Icons.format_list_numbered_rounded,
                   size: 18,
                   color: mode == _CompletionMode.quantitative
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.black.withValues(alpha: 0.55),
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.black.withValues(alpha: 0.55),
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Quantity',
+                  AppLocalizations.of(context)!.quantity,
                   style: TextStyle(
                     color: mode == _CompletionMode.quantitative
                         ? Theme.of(context).colorScheme.primary
@@ -716,11 +736,17 @@ class _QuantCompletionForm extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: TcTextField(controller: targetCtrl, labelText: 'Target'),
+              child: TcTextField(
+                controller: targetCtrl,
+                labelText: AppLocalizations.of(context)!.target,
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: TcTextField(controller: unitCtrl, labelText: 'Unit'),
+              child: TcTextField(
+                controller: unitCtrl,
+                labelText: AppLocalizations.of(context)!.unit,
+              ),
             ),
           ],
         ),

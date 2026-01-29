@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:timecraft/l10n/app_localizations.dart';
 import 'package:timecraft/components/scope_dialog.dart';
 import 'package:timecraft/model/task_instance.dart';
 import 'package:timecraft/model/completion.dart';
@@ -149,6 +150,7 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final start = _task.startTime;
     final end = _task.endTime;
 
@@ -217,9 +219,9 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
                                     '${_fmtDate(start)} • ${_fmtHm(start)}–${_fmtHm(end)}',
                               )
                             else
-                              const _InfoLine(
+                              _InfoLine(
                                 icon: Icons.schedule_rounded,
-                                text: 'Unscheduled',
+                                text: l10n.unscheduled,
                               ),
                             const SizedBox(height: 6),
                             if (_task.tags.isNotEmpty)
@@ -261,10 +263,10 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
                               color: accent,
                             ),
                             const SizedBox(width: 10),
-                            const Expanded(
+                            Expanded(
                               child: Text(
-                                'Completed',
-                                style: TextStyle(
+                                l10n.completed,
+                                style: const TextStyle(
                                   fontWeight: FontWeight.w900,
                                   color: text,
                                 ),
@@ -292,7 +294,7 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
                       // Description
                       if (_task.description.trim().isNotEmpty)
                         _Card(
-                          title: 'Description',
+                          title: l10n.description,
                           child: Text(
                             _task.description,
                             style: const TextStyle(
@@ -309,7 +311,7 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
                       // Subtasks
                       if (_task.subTasks.isNotEmpty)
                         _Card(
-                          title: 'Subtasks',
+                          title: l10n.subtasks,
                           child: Column(
                             children: [
                               for (final st in _task.subTasks)
@@ -350,17 +352,17 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
 
                       // Meta
                       _Card(
-                        title: 'Details',
+                        title: l10n.details,
                         child: Column(
                           children: [
                             _MetaRow(
-                              label: 'Priority',
+                              label: l10n.priority,
                               value: '${_task.priority}/5',
                               icon: Icons.bolt_rounded,
                             ),
                             const SizedBox(height: 6),
                             _MetaRow(
-                              label: 'Reminders',
+                              label: l10n.reminders,
                               value: '${_task.reminders.length}',
                               icon: Icons.notifications_active_rounded,
                             ),
@@ -376,7 +378,7 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
                           Expanded(
                             child: _PrimaryButton(
                               icon: Icons.edit_rounded,
-                              label: 'Edit',
+                              label: l10n.edit,
                               onTap: _onEdit,
                             ),
                           ),
@@ -384,7 +386,7 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
                           Expanded(
                             child: _SecondaryButton(
                               icon: Icons.close_rounded,
-                              label: 'Close',
+                              label: l10n.close,
                               onTap: () => Navigator.of(context).pop(),
                             ),
                           ),

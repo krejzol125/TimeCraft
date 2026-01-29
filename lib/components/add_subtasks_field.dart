@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:timecraft/l10n/app_localizations.dart';
 import 'package:timecraft/system_design/tc_fext_field.dart';
 import 'package:timecraft/system_design/tc_input_decorator.dart';
 
@@ -39,21 +40,22 @@ class _AddSubtasksFieldState extends State<AddSubtasksField> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return TcInputDecorator(
-      labelText: 'Subtasks',
+      labelText: l10n.addSubtasksLabel,
       prefixIcon: const Icon(Icons.checklist_outlined),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TcTextField(
             controller: _subtaskCtrls,
-            hintText: 'Add subtask...',
+            hintText: l10n.addSubtaskHint,
             leading: IconButton(
               icon: Icon(
                 Icons.add,
                 color: Theme.of(context).colorScheme.primary,
               ),
-              tooltip: 'Add subtask',
+              tooltip: l10n.addSubtaskTooltip,
               onPressed: () {
                 addSubtask(_subtaskCtrls.text);
                 _subtaskCtrls.clear();
@@ -99,10 +101,7 @@ class _SubtaskRow extends StatelessWidget {
           onPressed: onRemove,
           icon: Icon(
             Icons.close_rounded,
-            color: Theme.of(context)
-                .colorScheme
-                .primary
-                .withValues(alpha: 0.9),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.9),
           ),
           splashRadius: 18,
         ),
