@@ -81,11 +81,10 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  Future<void> _toggleLocale() async {
+  Future<void> _setLocale(Locale locale) async {
+    if (_locale == locale) return;
     setState(() {
-      _locale = _locale.languageCode == 'pl'
-          ? const Locale('en')
-          : const Locale('pl');
+      _locale = locale;
     });
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_localePrefsKey, _locale.languageCode);
@@ -125,7 +124,10 @@ class _MyAppState extends State<MyApp> {
                   case SessionSignedOut():
                     return const LoginPage();
                   case SessionSignedIn():
-                    return MainView(onToggleLocale: _toggleLocale);
+                    return MainView(
+                      locale: _locale,
+                      onLocaleChanged: _setLocale,
+                    );
                 }
               },
             ),

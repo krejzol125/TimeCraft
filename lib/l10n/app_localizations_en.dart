@@ -18,6 +18,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageToggle => 'Language';
 
   @override
+  String get accountSettings => 'Account settings';
+
+  @override
+  String get signOut => 'Sign out';
+
+  @override
+  String get languageEnglish => 'English';
+
+  @override
+  String get languagePolish => 'Polish';
+
+  @override
   String get undatedTasks => 'Undated tasks';
 
   @override

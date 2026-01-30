@@ -187,6 +187,7 @@ class _DetailedCalendarState extends State<DetailedCalendar> {
     final minScroll = _vScroll.position.minScrollExtent;
     final maxScroll = _vScroll.position.maxScrollExtent;
     WidgetsBinding.instance.scheduleFrameCallback((_) {
+      if (!mounted) return;
       if (!_vScroll.hasClients) return;
       _vScroll.jumpTo(wantedOffset.clamp(minScroll, maxScroll));
     });
@@ -496,8 +497,7 @@ class _DetailedCalendarState extends State<DetailedCalendar> {
                                               .round(),
                                         );
 
-                                        final oldStartUtc = inst.rid
-                                            ?.toUtc(); // u Ciebie tak
+                                        final oldStartUtc = inst.rid?.toUtc();
                                         await context
                                             .read<CalendarCubit>()
                                             .onTaskDrop(
@@ -507,6 +507,7 @@ class _DetailedCalendarState extends State<DetailedCalendar> {
                                               newDuration,
                                               context,
                                             );
+                                        if (!mounted) return;
 
                                         _ghost.value = null;
                                       },
@@ -552,6 +553,7 @@ class _DetailedCalendarState extends State<DetailedCalendar> {
                                         newDuration,
                                         context,
                                       );
+                                  if (!mounted) return;
 
                                   _ghost.value = null;
                                 },

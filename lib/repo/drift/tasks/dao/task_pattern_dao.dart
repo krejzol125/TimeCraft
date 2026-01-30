@@ -35,4 +35,8 @@ class TaskPatternDao extends DatabaseAccessor<LocalDB>
   Stream<List<TaskPattern>> watchChangedPatterns() => select(taskPatterns)
       .watch()
       .map((rows) => rows.map((row) => TaskPattern.fromEntry(row)).toList());
+
+  Future<void> clearAll() async {
+    await delete(taskPatterns).go();
+  }
 }

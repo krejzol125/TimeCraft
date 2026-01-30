@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:timecraft/auth/session_cubit.dart';
 import 'package:timecraft/l10n/app_localizations.dart';
 import 'package:timecraft/model/task_instance.dart';
 import 'package:timecraft/model/task_pattern.dart';
 import 'package:timecraft/pages/add_task_sheet/add_task_multi_sheet.dart';
+import 'package:timecraft/pages/account_settings/account_settings_page.dart';
 import 'package:timecraft/pages/calendar/bloc/calendar_cubit.dart';
 import 'package:timecraft/pages/calendar/bloc/calendar_state.dart';
 import 'package:timecraft/pages/calendar/view/month/month_calendar.dart';
@@ -11,9 +13,10 @@ import 'package:timecraft/pages/undated_drawer/view/undated_drawer.dart';
 import 'package:timecraft/repo/task_repo.dart';
 
 class MainView extends StatelessWidget {
-  MainView({super.key, required this.onToggleLocale});
+  MainView({super.key, required this.locale, required this.onLocaleChanged});
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final VoidCallback onToggleLocale;
+  final Locale locale;
+  final ValueChanged<Locale> onLocaleChanged;
   @override
   Widget build(BuildContext context1) {
     final Color bgTop = const Color(0xFFeef4ff);
@@ -26,16 +29,23 @@ class MainView extends StatelessWidget {
           appBar: AppBar(
             title: Text(strings.appTitle),
             backgroundColor: bgTop,
-            leading: SizedBox(
-              width: 86,
-              child: Center(
-                child: Tooltip(
-                  message: strings.languageToggle,
-                  child: IconButton(
-                    icon: Icon(Icons.language),
-                    onPressed: () => onToggleLocale(),
-                  ),
-                ),
+            leading: Tooltip(
+              message: strings.accountSettings,
+              child: IconButton(
+                icon: const Icon(Icons.account_circle_outlined),
+                onPressed: () {
+                  Navigator.of(context1).push(
+                    MaterialPageRoute(
+                      builder: (context) => AccountSettingsPage(
+                        locale: locale,
+                        onLocaleChanged: onLocaleChanged,
+                        onSignOut: () async {
+                          await context1.read<SessionCubit>().signOut();
+                        },
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
 

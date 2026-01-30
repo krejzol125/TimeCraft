@@ -47,4 +47,8 @@ class TaskInstanceDao extends DatabaseAccessor<LocalDB>
         .watch()
         .map((rows) => rows.map((row) => TaskInstance.fromEntry(row)).toList());
   }
+
+  Future<void> clearAll() async {
+    await delete(taskInstances).go();
+  }
 }

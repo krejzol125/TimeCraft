@@ -18,6 +18,18 @@ class AppLocalizationsPl extends AppLocalizations {
   String get languageToggle => 'Język';
 
   @override
+  String get accountSettings => 'Ustawienia konta';
+
+  @override
+  String get signOut => 'Wyloguj';
+
+  @override
+  String get languageEnglish => 'Angielski';
+
+  @override
+  String get languagePolish => 'Polski';
+
+  @override
   String get undatedTasks => 'Zadania bez daty';
 
   @override

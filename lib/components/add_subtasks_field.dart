@@ -14,20 +14,18 @@ class AddSubtasksField extends StatefulWidget {
   final List<String> initialSubtasks;
 
   @override
-  State<AddSubtasksField> createState() =>
-      _AddSubtasksFieldState(initialSubtasks);
+  State<AddSubtasksField> createState() => _AddSubtasksFieldState();
 }
 
 class _AddSubtasksFieldState extends State<AddSubtasksField> {
-  _AddSubtasksFieldState(List<String> initialSubtasks) {
-    _subtasks = List.from(initialSubtasks);
-  }
+  _AddSubtasksFieldState();
   late List<String> _subtasks;
   late TextEditingController _subtaskCtrls;
 
   @override
   void initState() {
     super.initState();
+    _subtasks = List.from(widget.initialSubtasks);
     _subtaskCtrls = TextEditingController();
   }
 

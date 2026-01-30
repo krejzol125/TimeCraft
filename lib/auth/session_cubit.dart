@@ -43,6 +43,7 @@ class SessionCubit extends Cubit<SessionState> {
     if (user == null) {
       _syncEngine.stop();
       _taskRepo.setUser(null);
+      _taskRepo.clear();
       emit(const SessionSignedOut());
       return;
     }

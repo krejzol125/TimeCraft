@@ -93,7 +93,7 @@ class TaskPattern {
       title = entry.title,
       completion = Completion.fromJson(entry.completion)!,
       description = entry.description ?? '',
-      startTime = entry.startTime,
+      startTime = entry.startTime?.toLocal(),
       duration = entry.duration != null
           ? Duration(milliseconds: entry.duration!)
           : null,
@@ -115,8 +115,8 @@ class TaskPattern {
           : [],
       deleted = entry.deleted,
       rev = entry.rev,
-      createdAt = entry.createdAt,
-      updatedAt = entry.updatedAt;
+      createdAt = entry.createdAt.toLocal(),
+      updatedAt = entry.updatedAt.toLocal();
 
   TaskOverride differenceFrom(TaskPattern pattern, DateTime rid) {
     return TaskOverride(
@@ -145,7 +145,7 @@ class TaskPattern {
       title: Value(title),
       completion: Value(completion.toJson()),
       description: Value(description.isNotEmpty ? description : null),
-      startTime: Value(startTime),
+      startTime: Value(startTime?.toUtc()),
       duration: Value(duration?.inMilliseconds),
       rrule: Value(rrule?.toString()),
       tags: Value(tags.isNotEmpty ? tags.join(';') : null),
@@ -158,8 +158,8 @@ class TaskPattern {
       subTasks: Value(subTasks.isNotEmpty ? subTasks.join(';') : null),
       deleted: Value(deleted),
       rev: Value(rev),
-      createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
+      createdAt: Value(createdAt.toUtc()),
+      updatedAt: Value(updatedAt.toUtc()),
     );
   }
 
@@ -170,7 +170,7 @@ class TaskPattern {
     'title': title,
     'completion': completion.toJson(),
     'description': description,
-    'startTime': startTime?.toIso8601String(),
+    'startTime': startTime?.toUtc().toIso8601String(),
     'duration': duration?.inMilliseconds,
     'rrule': rrule?.toString(),
     'tags': tags.join(';'),
@@ -179,8 +179,8 @@ class TaskPattern {
     'subTasks': subTasks.join(';'),
     'deleted': deleted,
     'rev': rev,
-    'createdAt': createdAt.toIso8601String(),
-    'updatedAt': updatedAt.toIso8601String(),
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
   };
 
   static TaskPattern fromJson(String m) =>
@@ -192,7 +192,7 @@ class TaskPattern {
     completion: Completion.fromJson(map['completion'])!,
     description: map['description'] ?? '',
     startTime: map['startTime'] != null
-        ? DateTime.parse(map['startTime'])
+        ? DateTime.parse(map['startTime']).toLocal()
         : null,
     duration: map['duration'] != null
         ? Duration(milliseconds: map['duration'])
@@ -213,7 +213,7 @@ class TaskPattern {
         : [],
     deleted: map['deleted'] ?? false,
     rev: map['rev'] ?? 0,
-    createdAt: DateTime.parse(map['createdAt']),
-    updatedAt: DateTime.parse(map['updatedAt']),
+    createdAt: DateTime.parse(map['createdAt']).toLocal(),
+    updatedAt: DateTime.parse(map['updatedAt']).toLocal(),
   );
 }

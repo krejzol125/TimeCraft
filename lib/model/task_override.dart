@@ -66,8 +66,8 @@ class TaskOverride {
     this.rev = 0,
     this.deleted = false,
   }) : taskId = tp.id,
-       createdAt = tp.createdAt,
-       updatedAt = DateTime.now();
+       createdAt = tp.createdAt.toLocal(),
+       updatedAt = DateTime.now().toLocal();
 
   TaskOverride copyWith({
     String? taskId,
@@ -107,13 +107,13 @@ class TaskOverride {
 
   TaskOverride.fromEntry(TaskOverrideEntry entry)
     : taskId = entry.taskId,
-      rid = entry.rid,
+      rid = entry.rid.toLocal(),
       title = entry.title,
       completion = entry.completion != null
           ? Completion.fromJson(entry.completion!)
           : null,
       description = entry.description,
-      startTime = entry.startTime,
+      startTime = entry.startTime?.toLocal(),
       duration = entry.duration != null
           ? Duration(milliseconds: entry.duration!)
           : null,
@@ -135,17 +135,17 @@ class TaskOverride {
           : null,
       rev = entry.rev,
       deleted = entry.deleted,
-      createdAt = entry.createdAt,
-      updatedAt = entry.updatedAt;
+      createdAt = entry.createdAt.toLocal(),
+      updatedAt = entry.updatedAt.toLocal();
 
   TaskOverridesCompanion toCompanion() {
     return TaskOverridesCompanion.insert(
       taskId: taskId,
-      rid: rid,
+      rid: rid.toUtc(),
       title: Value(title),
       completion: Value(completion?.toJson()),
       description: Value(description),
-      startTime: Value(startTime),
+      startTime: Value(startTime?.toUtc()),
       duration: Value(duration?.inMilliseconds),
       tags: Value(tags?.join(';')),
       priority: Value(priority),
@@ -153,8 +153,8 @@ class TaskOverride {
       subTasks: Value(subTasks?.map((e) => '${e.$1},${e.$2}').join(';')),
       rev: Value(rev),
       deleted: Value(deleted),
-      createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
+      createdAt: Value(createdAt.toUtc()),
+      updatedAt: Value(updatedAt.toUtc()),
     );
   }
 
@@ -178,11 +178,11 @@ class TaskOverride {
   Map<String, dynamic> toMap() {
     return {
       'taskId': taskId,
-      'rid': rid.toIso8601String(),
+      'rid': rid.toUtc().toIso8601String(),
       'title': title,
       'completion': completion?.toJson(),
       'description': description,
-      'startTime': startTime?.toIso8601String(),
+      'startTime': startTime?.toUtc().toIso8601String(),
       'duration': duration?.inMilliseconds,
       'tags': tags?.join(';'),
       'priority': priority,
@@ -190,22 +190,22 @@ class TaskOverride {
       'subTasks': subTasks?.map((e) => '${e.$1},${e.$2}').join(';'),
       'rev': rev,
       'deleted': deleted,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
+      'createdAt': createdAt.toUtc().toIso8601String(),
+      'updatedAt': updatedAt.toUtc().toIso8601String(),
     };
   }
 
   static TaskOverride fromMap(Map<String, dynamic> map) {
     return TaskOverride(
       taskId: map['taskId'],
-      rid: DateTime.parse(map['rid']),
+      rid: DateTime.parse(map['rid']).toLocal(),
       title: map['title'],
       completion: map['completion'] != null
           ? Completion.fromJson(map['completion'])
           : null,
       description: map['description'],
       startTime: map['startTime'] != null
-          ? DateTime.parse(map['startTime'])
+          ? DateTime.parse(map['startTime']).toLocal()
           : null,
       duration: map['duration'] != null
           ? Duration(milliseconds: map['duration'])
@@ -228,8 +228,8 @@ class TaskOverride {
           : null,
       rev: map['rev'],
       deleted: map['deleted'],
-      createdAt: DateTime.parse(map['createdAt']),
-      updatedAt: DateTime.parse(map['updatedAt']),
+      createdAt: DateTime.parse(map['createdAt']).toLocal(),
+      updatedAt: DateTime.parse(map['updatedAt']).toLocal(),
     );
   }
 

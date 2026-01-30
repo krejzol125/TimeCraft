@@ -31,18 +31,17 @@ class TcRadioPicker<T> extends StatelessWidget {
                 duration: const Duration(milliseconds: 160),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                    color: selected
-                      ? Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.10)
+                  color: selected
+                      ? Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.10)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: selected
                         ? Theme.of(
                             context,
-                        ).colorScheme.primary.withValues(alpha: 0.55)
+                          ).colorScheme.primary.withValues(alpha: 0.55)
                         : Colors.transparent,
                     width: 1.2,
                   ),

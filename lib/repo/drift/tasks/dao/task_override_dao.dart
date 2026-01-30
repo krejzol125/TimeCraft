@@ -19,7 +19,6 @@ class TaskOverrideDao extends DatabaseAccessor<LocalDB>
   }
 
   Future<TaskOverride?> getOverrideById(String taskId, DateTime rid) async {
-    
     return (select(taskOverrides)
           ..where((tbl) => tbl.taskId.equals(taskId) & tbl.rid.equals(rid)))
         .getSingleOrNull()
@@ -33,4 +32,14 @@ class TaskOverrideDao extends DatabaseAccessor<LocalDB>
   Stream<List<TaskOverride>> watchChangedOverrides() => select(taskOverrides)
       .watch()
       .map((rows) => rows.map((row) => TaskOverride.fromEntry(row)).toList());
+
+  Future<void> hardDeleteOverride(String taskId, DateTime rid) async {
+    await (delete(
+      taskOverrides,
+    )..where((tbl) => tbl.taskId.equals(taskId) & tbl.rid.equals(rid))).go();
+  }
+
+  Future<void> clearAll() async {
+    await delete(taskOverrides).go();
+  }
 }

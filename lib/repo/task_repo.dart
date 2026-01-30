@@ -33,6 +33,12 @@ class TaskRepo {
     return _taskPatternDao.getPatternById(id);
   }
 
+  Future<void> clear() async {
+    await _taskInstanceDao.clearAll();
+    await _taskPatternDao.clearAll();
+    await _taskOverrideDao.clearAll();
+  }
+
   // ! Streams
 
   Stream<List<TaskInstance>> watchTasksInWindow(DateTime from, DateTime to) {
@@ -132,15 +138,15 @@ class TaskRepo {
               .subtract(const Duration(seconds: 1))
               .copyWith(isUtc: true),
         ),
-        rev: DateTime.now().millisecondsSinceEpoch,
-        updatedAt: DateTime.now(),
+        rev: DateTime.now().toUtc().millisecondsSinceEpoch,
+        updatedAt: DateTime.now().toUtc(),
       ),
     );
     await _taskPatternDao.upsertPattern(
       newPattern.copyWith(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        rev: DateTime.now().millisecondsSinceEpoch,
-        updatedAt: DateTime.now(),
+        id: DateTime.now().toUtc().millisecondsSinceEpoch.toString(),
+        rev: DateTime.now().toUtc().millisecondsSinceEpoch,
+        updatedAt: DateTime.now().toUtc(),
       ),
     );
   }
@@ -156,8 +162,8 @@ class TaskRepo {
       pattern.copyWith(
         startTime: startTime,
         duration: duration,
-        rev: DateTime.now().millisecondsSinceEpoch,
-        updatedAt: DateTime.now(),
+        rev: DateTime.now().toUtc().millisecondsSinceEpoch,
+        updatedAt: DateTime.now().toUtc(),
       ),
     );
   }
@@ -185,15 +191,15 @@ class TaskRepo {
         byWeekDays: days.toList(),
         until: pattern.rrule?.until?.add(offset),
       );
-      print('new rule is $rrule');
+      // print('new rule is $rrule');
 
       await upsertPattern(
         pattern.copyWith(
           startTime: startTime,
           duration: duration,
           rrule: rrule,
-          rev: DateTime.now().millisecondsSinceEpoch,
-          updatedAt: DateTime.now(),
+          rev: DateTime.now().toUtc().millisecondsSinceEpoch,
+          updatedAt: DateTime.now().toUtc(),
         ),
       );
       return;
@@ -214,8 +220,8 @@ class TaskRepo {
         rrule: pattern.rrule!.copyWith(
           until: pattern.rrule?.until?.add(offset),
         ),
-        rev: DateTime.now().millisecondsSinceEpoch,
-        updatedAt: DateTime.now(),
+        rev: DateTime.now().toUtc().millisecondsSinceEpoch,
+        updatedAt: DateTime.now().toUtc(),
       ),
     );
   }
@@ -254,16 +260,16 @@ class TaskRepo {
                     .copyWith(isUtc: true)
               : null,
         ),
-        rev: DateTime.now().millisecondsSinceEpoch,
-        updatedAt: DateTime.now(),
+        rev: DateTime.now().toUtc().millisecondsSinceEpoch,
+        updatedAt: DateTime.now().toUtc(),
       ),
     );
     TaskPattern newPattern = pattern.copyWith(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       startTime: splitRid.add(offset),
       duration: duration,
-      rev: DateTime.now().millisecondsSinceEpoch,
-      updatedAt: DateTime.now(),
+      rev: DateTime.now().toUtc().millisecondsSinceEpoch,
+      updatedAt: DateTime.now().toUtc(),
     );
     await upsertPattern(newPattern);
   }

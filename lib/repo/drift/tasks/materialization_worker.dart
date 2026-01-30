@@ -164,8 +164,9 @@ class MaterializationWorker {
     );
     List<TaskInstance> instances = materializedDates
         .map((dt) {
-          TaskOverride? override =
-              overrideMap[dt.copyWith(isUtc: false).toIso8601String()];
+          TaskOverride? override = overrideMap.remove(
+            dt.copyWith(isUtc: false).toIso8601String(),
+          );
           // print(
           //   'Applying override ${override.rid} for pattern ${pattern.title} at ${dt.copyWith(isUtc: false)}',
           // );
@@ -180,6 +181,9 @@ class MaterializationWorker {
         })
         .where((t) => t.deleted == false)
         .toList();
+    for (final ovr in overrideMap.values) {
+      await _taskOverrideDao.hardDeleteOverride(taskId, ovr.rid);
+    }
     await _taskInstanceDao.replaceInstancesForPattern(taskId, instances);
   }
 }
