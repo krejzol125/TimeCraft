@@ -17,7 +17,7 @@ class RemoteApplier {
     final remote = TaskPattern.fromMap(m);
     final local = await _patternDao.getPatternById(remote.id);
     if (local == null || remote.rev > local.rev) {
-      print('applying pattern ${remote.title} rev ${remote.startTime}');
+      //print('applying pattern ${remote.title} rev ${remote.startTime}');
       await _patternDao.upsertPattern(remote);
       //await _patternDao.markPatternDirty(remote.id, remote.rev);
     }

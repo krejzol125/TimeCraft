@@ -6,6 +6,7 @@ class TcStepper extends StatelessWidget {
     required this.onChanged,
     required this.min,
     required this.max,
+    super.key,
   });
 
   final int value;

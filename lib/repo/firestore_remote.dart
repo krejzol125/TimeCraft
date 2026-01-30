@@ -12,9 +12,6 @@ class FirestoreRemote {
 
   Future<void> pushPattern(String uid, Map<String, dynamic> doc) async {
     final id = doc['id'] as String;
-    for (final e in doc.entries) {
-      print('${e.key}: ${e.value.runtimeType} => ${e.value}');
-    }
     await patterns(uid).doc(id).set({...doc}, SetOptions(merge: true));
   }
 
@@ -23,9 +20,6 @@ class FirestoreRemote {
     String overrideId,
     Map<String, dynamic> doc,
   ) async {
-    for (final e in doc.entries) {
-      print('${e.key}: ${e.value.runtimeType} => ${e.value}');
-    }
     await overrides(uid).doc(overrideId).set({...doc}, SetOptions(merge: true));
   }
 }

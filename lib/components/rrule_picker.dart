@@ -266,7 +266,7 @@ class _RRulePickerState extends State<RRulePicker> {
 }
 
 class _WeekdayChips extends StatelessWidget {
-  _WeekdayChips({
+  const _WeekdayChips({
     required this.l10n,
     required this.selected,
     required this.onToggle,

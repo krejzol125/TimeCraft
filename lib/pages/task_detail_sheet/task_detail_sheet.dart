@@ -102,13 +102,14 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
     RecurrenceMoveScope? scope;
     if (pattern.rrule == null || _task.rid == null) {
       scope = RecurrenceMoveScope.entireSeries;
-    } else {
+    } else if (mounted) {
       scope = await showMoveScopeDialog(context);
     }
 
     if (scope == null) return;
     switch (scope) {
       case RecurrenceMoveScope.singleOccurrence:
+        if (mounted == false) return;
         final updated = await AddTaskSheetMultiStep.show(
           context,
           initialPattern: pattern.copyWith(
@@ -126,6 +127,7 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
         }
         break;
       case RecurrenceMoveScope.entireSeries:
+        if (mounted == false) return;
         final updated = await AddTaskSheetMultiStep.show(
           context,
           initialPattern: pattern,
@@ -134,6 +136,7 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
         widget.repo.upsertPattern(updated);
         break;
       case RecurrenceMoveScope.thisAndFuture:
+        if (mounted == false) return;
         final updated = await AddTaskSheetMultiStep.show(
           context,
           initialPattern: pattern.copyWith(
@@ -145,7 +148,7 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
         widget.repo.splitPattern(_task.taskId, _task.rid!, updated);
         break;
     }
-    if (context.mounted) Navigator.of(context).pop();
+    if (mounted) Navigator.of(context).pop();
   }
 
   @override

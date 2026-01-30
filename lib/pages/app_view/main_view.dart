@@ -125,7 +125,7 @@ class MainView extends StatelessWidget {
             label: Text(strings.newTask),
             onPressed: () async {
               TaskPattern? pattern = await AddTaskSheetMultiStep.show(context);
-              if (pattern != null) {
+              if (pattern != null && context.mounted) {
                 context.read<TaskRepo>().upsertPattern(pattern);
               }
               // await showModalBottomSheet(

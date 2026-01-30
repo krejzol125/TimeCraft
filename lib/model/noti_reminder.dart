@@ -3,7 +3,7 @@ abstract class NotiReminder {
   int id;
 
   //todo Add ways to remind
-  DateTime WhenToRemind(DateTime taskStartTime);
+  DateTime whenToRemind(DateTime taskStartTime);
 
   static NotiReminder? fromJson(String? json) {
     if (json == null) return null;
@@ -18,9 +18,7 @@ abstract class NotiReminder {
           return RelativeNotiReminder(Duration(seconds: int.parse(values[1])));
       }
     } catch (e) {
-      print(
-        "Error parsing NotiReminder from json: $json, error: $e, values.length = ${values.length}",
-      );
+      return null;
     }
     return null;
   }
@@ -33,7 +31,8 @@ class AbsoluteNotiReminder extends NotiReminder {
 
   DateTime reminder;
 
-  DateTime WhenToRemind(DateTime taskStartTime) {
+  @override
+  DateTime whenToRemind(DateTime taskStartTime) {
     return taskStartTime.copyWith(
       hour: reminder.hour,
       minute: reminder.minute,
@@ -41,6 +40,7 @@ class AbsoluteNotiReminder extends NotiReminder {
     );
   }
 
+  @override
   String toJson() {
     return "0 ${reminder.toIso8601String()}";
   }
@@ -51,10 +51,12 @@ class RelativeNotiReminder extends NotiReminder {
 
   Duration reminder;
 
-  DateTime WhenToRemind(DateTime taskStartTime) {
+  @override
+  DateTime whenToRemind(DateTime taskStartTime) {
     return taskStartTime.subtract(reminder);
   }
 
+  @override
   String toJson() {
     return "1 ${reminder.inSeconds}";
   }

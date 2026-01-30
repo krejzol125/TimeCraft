@@ -61,7 +61,7 @@ TaskInputParsed parseTaskInputAdvanced(String text, AppLocalizations l10n) {
 }
 
 class HashtagHighlightController extends TextEditingController {
-  HashtagHighlightController({String? text}) : super(text: text);
+  HashtagHighlightController({super.text});
 
   TextStyle baseStyle = const TextStyle(fontSize: 16);
 

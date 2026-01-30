@@ -4,7 +4,11 @@ import 'package:timecraft/model/task_instance.dart';
 import 'package:timecraft/pages/undated_drawer/view/undated_task_draggable_tile.dart';
 
 class UndatedDrawer extends StatelessWidget {
-  const UndatedDrawer({required this.undated, required this.onDragStartClose});
+  const UndatedDrawer({
+    required this.undated,
+    required this.onDragStartClose,
+    super.key,
+  });
 
   final List<TaskInstance> undated;
   final VoidCallback onDragStartClose;

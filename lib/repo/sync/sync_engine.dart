@@ -102,7 +102,7 @@ class SyncEngine {
             await _outboxDao.markSent(e.entityKey);
           } catch (err) {
             //await _outboxDao.markFailed(e.id, err.toString());
-            print('Error pushing ${e.entityType} ${e.entityKey}: $err');
+            //print('Error pushing ${e.entityType} ${e.entityKey}: $err');
           }
         }
       }

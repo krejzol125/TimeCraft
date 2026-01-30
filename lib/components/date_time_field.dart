@@ -67,6 +67,7 @@ class DateTimeField extends StatelessWidget {
       lastDate: DateTime(now.year + 5),
     );
     if (date == null) return null;
+    if (context.mounted == false) return null;
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(base),

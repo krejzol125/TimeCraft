@@ -69,7 +69,7 @@ class TaskRepo {
       await _taskPatternDao.upsertPattern(updated);
 
       if (_uid != null) {
-        print('enqueuing pattern update for uid $_uid');
+        //print('enqueuing pattern update for uid $_uid');
         await _outboxDao.enqueue(
           uid: _uid!,
           entityType: 'pattern',
