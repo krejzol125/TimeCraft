@@ -19,7 +19,8 @@ class SessionSignedOut extends SessionState {
 
 class SessionSignedIn extends SessionState {
   final String uid;
-  const SessionSignedIn(this.uid);
+  final String email;
+  const SessionSignedIn(this.uid, this.email);
 }
 
 class SessionCubit extends Cubit<SessionState> {
@@ -50,7 +51,8 @@ class SessionCubit extends Cubit<SessionState> {
     final uid = user.uid;
     _taskRepo.setUser(uid);
     _syncEngine.start(uid);
-    emit(SessionSignedIn(uid));
+    final email = _authRepo.getUserEmail();
+    emit(SessionSignedIn(uid, email));
   }
 
   Future<void> signIn(String email, String pass) async {

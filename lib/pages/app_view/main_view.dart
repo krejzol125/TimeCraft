@@ -5,7 +5,7 @@ import 'package:timecraft/components/draggable_button.dart';
 import 'package:timecraft/l10n/app_localizations.dart';
 import 'package:timecraft/model/task_instance.dart';
 import 'package:timecraft/model/task_pattern.dart';
-import 'package:timecraft/pages/add_task_sheet/add_task_multi_sheet.dart';
+import 'package:timecraft/pages/add_task_sheet/edit_task_multi_sheet.dart';
 import 'package:timecraft/pages/account_settings/account_settings_page.dart';
 import 'package:timecraft/pages/calendar/bloc/calendar_cubit.dart';
 import 'package:timecraft/pages/calendar/bloc/calendar_state.dart';
@@ -39,6 +39,9 @@ class MainView extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (context) => AccountSettingsPage(
                         locale: locale,
+                        email: state is SessionSignedIn
+                            ? (state as SessionSignedIn).email
+                            : '',
                         onLocaleChanged: onLocaleChanged,
                         onSignOut: () async {
                           await context1.read<SessionCubit>().signOut();
@@ -123,7 +126,7 @@ class MainView extends StatelessWidget {
           ),
           floatingActionButton: DraggableButton(
             onPressed: () async {
-              TaskPattern? pattern = await AddTaskSheetMultiStep.show(context);
+              TaskPattern? pattern = await EditTaskSheetMultiStep.show(context);
               if (pattern != null && context.mounted) {
                 context.read<TaskRepo>().upsertPattern(pattern);
               }
@@ -132,7 +135,7 @@ class MainView extends StatelessWidget {
               //   isScrollControlled: true,
               //   useSafeArea: true,
               //   backgroundColor: Colors.transparent,
-              //   builder: (ctx) => AddTaskSheetMultiStep(
+              //   builder: (ctx) => EditTaskSheetMultiStep(
               //     onSubmit: context.read<TaskRepo>().createPattern,
               //   ),
               // );

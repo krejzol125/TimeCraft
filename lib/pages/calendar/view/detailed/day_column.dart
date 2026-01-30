@@ -32,7 +32,6 @@ class DayColumn extends StatelessWidget {
 
   final ValueListenable<GhostState?> ghost;
 
-  /// parent liczy ghost (bo ma autoscroll, snap, itp.)
   final void Function(String day, DragData data, Offset globalOffset)
   onMoveGhost;
   final VoidCallback onLeaveGhost;

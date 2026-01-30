@@ -134,7 +134,7 @@ class MaterializationWorker {
     );
     await _materializationStateDao.upsertState(newState);
 
-    if (pattern.rrule == null) {
+    if (pattern.rrule == null || pattern.startTime == null) {
       // print(
       //   'Materializing single instance for pattern ${pattern.title} with startTime ${pattern.startTime}',
       // );

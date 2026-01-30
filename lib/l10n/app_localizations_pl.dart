@@ -42,6 +42,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get createTask => 'Utwórz zadanie';
 
   @override
+  String get editTask => 'Edytuj zadanie';
+
+  @override
   String get cancel => 'Anuluj';
 
   @override

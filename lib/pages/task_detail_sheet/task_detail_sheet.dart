@@ -5,7 +5,7 @@ import 'package:timecraft/model/task_instance.dart';
 import 'package:timecraft/model/completion.dart';
 import 'package:timecraft/model/task_override.dart';
 import 'package:timecraft/model/task_pattern.dart';
-import 'package:timecraft/pages/add_task_sheet/add_task_multi_sheet.dart';
+import 'package:timecraft/pages/add_task_sheet/edit_task_multi_sheet.dart';
 import 'package:timecraft/repo/task_repo.dart';
 import 'package:timecraft/system_design/tc_button.dart';
 import 'package:timecraft/system_design/tc_stepper.dart';
@@ -36,12 +36,6 @@ class TaskDetailsSheet extends StatefulWidget {
 }
 
 class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
-  static const bgCard = Color(0xFFF6F7FB);
-  static const stroke = Color(0xFFB9BFCC);
-  static const text = Color(0xFF111827);
-  static const subtext = Color(0xFF6B7280);
-  static const accent = Color(0xFF1F4AA8);
-
   late TaskInstance _task;
   bool _saving = false;
 
@@ -103,7 +97,7 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
     switch (scope) {
       case RecurrenceMoveScope.singleOccurrence:
         if (mounted == false) return;
-        final updated = await AddTaskSheetMultiStep.show(
+        final updated = await EditTaskSheetMultiStep.show(
           context,
           initialPattern: pattern.copyWith(
             startTime: _task.startTime,
@@ -121,7 +115,7 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
         break;
       case RecurrenceMoveScope.entireSeries:
         if (mounted == false) return;
-        final updated = await AddTaskSheetMultiStep.show(
+        final updated = await EditTaskSheetMultiStep.show(
           context,
           initialPattern: pattern,
         );
@@ -130,7 +124,7 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
         break;
       case RecurrenceMoveScope.thisAndFuture:
         if (mounted == false) return;
-        final updated = await AddTaskSheetMultiStep.show(
+        final updated = await EditTaskSheetMultiStep.show(
           context,
           initialPattern: pattern.copyWith(
             startTime: _task.startTime,
@@ -155,9 +149,12 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
       child: Container(
         margin: const EdgeInsets.fromLTRB(12, 12, 12, 12),
         decoration: BoxDecoration(
-          color: bgCard.withValues(alpha: 0.96),
+          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.96),
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: stroke.withValues(alpha: 0.95), width: 1.2),
+          border: Border.all(
+            color: Colors.black.withValues(alpha: 0.95),
+            width: 1.2,
+          ),
           boxShadow: [
             BoxShadow(
               blurRadius: 18,
@@ -199,10 +196,10 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
                           children: [
                             Text(
                               _task.title,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w900,
-                                color: text,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -233,7 +230,9 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
                       IconButton(
                         onPressed: () => Navigator.of(context).pop(),
                         icon: const Icon(Icons.close_rounded),
-                        color: subtext,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.75),
                       ),
                     ],
                   ),
@@ -253,16 +252,19 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
                             Icon(
                               Icons.check_circle_rounded,
                               color: _task.completion.isCompleted
-                                  ? accent
-                                  : subtext,
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.onSurface
+                                        .withValues(alpha: 0.75),
                             ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 l10n.completed,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w900,
-                                  color: text,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                               ),
                             ),
@@ -296,8 +298,9 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
                               const SizedBox(width: 8),
                               Text(
                                 '/${(_task.completion as QuantityCompletion).cap}',
-                                style: const TextStyle(
-                                  color: subtext,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.75),
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -313,8 +316,8 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
                           title: l10n.description,
                           child: Text(
                             _task.description,
-                            style: const TextStyle(
-                              color: text,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
                               fontWeight: FontWeight.w600,
                               height: 1.25,
                             ),
@@ -341,14 +344,23 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
                                             ? Icons.check_box_rounded
                                             : Icons
                                                   .check_box_outline_blank_rounded,
-                                        color: st.$2 ? accent : subtext,
+                                        color: st.$2
+                                            ? Theme.of(
+                                                context,
+                                              ).colorScheme.primary
+                                            : Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withValues(alpha: 0.75),
                                       ),
                                       const SizedBox(width: 10),
                                       Expanded(
                                         child: Text(
                                           st.$1,
                                           style: TextStyle(
-                                            color: text,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSurface,
                                             fontWeight: FontWeight.w700,
                                             decoration: st.$2
                                                 ? TextDecoration.lineThrough
@@ -424,8 +436,6 @@ class _Card extends StatelessWidget {
   final String? title;
   final Widget child;
 
-  static const stroke = _TaskDetailsSheetState.stroke;
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -433,7 +443,11 @@ class _Card extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.60),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: stroke.withValues(alpha: 0.85)),
+        border: Border.all(
+          color: Theme.of(
+            context,
+          ).colorScheme.onSurface.withValues(alpha: 0.35),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -441,9 +455,9 @@ class _Card extends StatelessWidget {
           if (title != null) ...[
             Text(
               title!,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w900,
-                color: _TaskDetailsSheetState.text,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
@@ -465,13 +479,21 @@ class _InfoLine extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: _TaskDetailsSheetState.subtext),
+        Icon(
+          icon,
+          size: 16,
+          color: Theme.of(
+            context,
+          ).colorScheme.onSurface.withValues(alpha: 0.75),
+        ),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
-              color: _TaskDetailsSheetState.subtext,
+            style: TextStyle(
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.75),
               fontWeight: FontWeight.w700,
               fontSize: 12.5,
             ),
@@ -492,16 +514,16 @@ class _TagPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: _TaskDetailsSheetState.accent.withValues(alpha: 0.10),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: _TaskDetailsSheetState.accent.withValues(alpha: 0.30),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.30),
         ),
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: _TaskDetailsSheetState.accent,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.primary,
           fontWeight: FontWeight.w900,
           fontSize: 12,
         ),
@@ -521,17 +543,17 @@ class _PriorityBadge extends StatelessWidget {
       width: 44,
       height: 44,
       decoration: BoxDecoration(
-        color: _TaskDetailsSheetState.accent.withValues(alpha: 0.10),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _TaskDetailsSheetState.accent.withValues(alpha: 0.35),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.35),
         ),
       ),
       child: Center(
         child: Text(
           'P$stars',
-          style: const TextStyle(
-            color: _TaskDetailsSheetState.accent,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -555,21 +577,31 @@ class _DataRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: _TaskDetailsSheetState.subtext),
+        Icon(
+          icon,
+          size: 16,
+          color: Theme.of(
+            context,
+          ).colorScheme.onSurface.withValues(alpha: 0.75),
+        ),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(
-              color: _TaskDetailsSheetState.subtext,
+            style: TextStyle(
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.75),
               fontWeight: FontWeight.w800,
             ),
           ),
         ),
         Text(
           value,
-          style: const TextStyle(
-            color: _TaskDetailsSheetState.text,
+          style: TextStyle(
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.75),
             fontWeight: FontWeight.w900,
           ),
         ),

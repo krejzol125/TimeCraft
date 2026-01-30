@@ -26,11 +26,9 @@ class OutboxDao extends DatabaseAccessor<LocalDB> with _$OutboxDaoMixin {
   }) async {
     await into(outbox).insertOnConflictUpdate(
       OutboxCompanion.insert(
-        //id: id,
         uid: uid,
         entityType: entityType,
         entityKey: entityKey,
-        //op: op,
         rev: rev,
         payloadJson: payloadJson,
         sent: Value(false),

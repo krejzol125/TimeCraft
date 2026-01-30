@@ -13,8 +13,8 @@ import 'package:timecraft/system_design/tc_text_field.dart';
 import 'package:timecraft/system_design/tc_input_decorator.dart';
 import 'package:timecraft/system_design/tc_radio_button.dart';
 
-class AddTaskSheetMultiStep extends StatefulWidget {
-  const AddTaskSheetMultiStep({
+class EditTaskSheetMultiStep extends StatefulWidget {
+  const EditTaskSheetMultiStep({
     super.key,
     this.initialStart,
     this.initialEnd,
@@ -36,7 +36,7 @@ class AddTaskSheetMultiStep extends StatefulWidget {
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => AddTaskSheetMultiStep(
+      builder: (ctx) => EditTaskSheetMultiStep(
         initialStart: initialStart,
         initialEnd: initialEnd,
         initialPattern: initialPattern,
@@ -45,12 +45,10 @@ class AddTaskSheetMultiStep extends StatefulWidget {
   }
 
   @override
-  State<AddTaskSheetMultiStep> createState() => _AddTaskSheetMultiStepState();
+  State<EditTaskSheetMultiStep> createState() => _EditTaskSheetMultiStepState();
 }
 
-class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
-  static const bgCard = Color(0xFFF6F7FB);
-  static const stroke = Color(0xFFB9BFCC);
+class _EditTaskSheetMultiStepState extends State<EditTaskSheetMultiStep> {
   int _step = 0;
 
   String _raw = '';
@@ -207,10 +205,14 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
         child: Container(
           margin: const EdgeInsets.fromLTRB(12, 12, 12, 12),
           decoration: BoxDecoration(
-            color: bgCard.withValues(alpha: 0.96),
+            color: Theme.of(
+              context,
+            ).colorScheme.surface.withValues(alpha: 0.96),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: stroke.withValues(alpha: 0.95),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.95),
               width: 1.2,
             ),
             boxShadow: [
@@ -236,17 +238,22 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
                       children: [
                         Expanded(
                           child: Text(
-                            l10n.createTask,
-                            style: const TextStyle(
+                            widget.initialPattern != null
+                                ? l10n.editTask
+                                : l10n.createTask,
+                            style: TextStyle(
                               fontSize: 26,
                               fontWeight: FontWeight.w800,
-                              color: Colors.black,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
                         ),
                         if (widget.initialPattern != null)
                           IconButton(
-                            icon: Icon(Icons.delete, color: Colors.red),
+                            icon: Icon(
+                              Icons.delete,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
                             onPressed: () {
                               Navigator.of(context).maybePop<TaskPattern>(
                                 widget.initialPattern!.copyWith(deleted: true),
@@ -302,7 +309,11 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
                               Expanded(
                                 child: TcButton(
                                   onTap: _step == 2 ? _submit : _next,
-                                  label: _step == 2 ? l10n.create : l10n.next,
+                                  label: _step == 2
+                                      ? (widget.initialPattern != null
+                                            ? l10n.edit
+                                            : l10n.create)
+                                      : l10n.next,
                                   icon: _step == 2
                                       ? Icons.check_rounded
                                       : Icons.arrow_forward_rounded,
@@ -388,9 +399,9 @@ class _StepHeader extends StatelessWidget {
       final done = idx < step;
       final color = active
           ? Colors.black
-          : Colors.black.withValues(alpha: 0.85);
+          : Theme.of(context).colorScheme.primary.withValues(alpha: 0.85);
       final bg = active
-          ? Colors.black.withValues(alpha: 0.10)
+          ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15)
           : Colors.white.withValues(alpha: 0.55);
 
       return Expanded(
@@ -412,7 +423,7 @@ class _StepHeader extends StatelessWidget {
                   Icon(
                     Icons.check_circle_rounded,
                     size: 16,
-                    color: Colors.black,
+                    color: Theme.of(context).colorScheme.primary,
                   )
                 else
                   Icon(
@@ -421,15 +432,17 @@ class _StepHeader extends StatelessWidget {
                         : Icons.radio_button_unchecked_rounded,
                     size: 16,
                     color: active
-                        ? Colors.black
-                        : Colors.black.withValues(alpha: 0.55),
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.55),
                   ),
                 const SizedBox(width: 8),
                 Text(
                   label,
                   style: TextStyle(
                     color: active
-                        ? Colors.black
+                        ? Theme.of(context).colorScheme.primary
                         : Colors.black.withValues(alpha: 0.55),
                     fontWeight: FontWeight.w900,
                     fontSize: 13.5,

@@ -27,8 +27,6 @@ class MonthToDetailPage extends StatefulWidget {
 }
 
 class _MonthToDetailPageState extends State<MonthToDetailPage> {
-  // ===== tokens (pasują do Twojego stylu) =====
-  //static const _bgCard = Color(0xFFF6F7FB);
   static const _stroke = Color(0xFFB9BFCC);
   static const _text = Color(0xFF111827);
   static const _subtext = Color(0xFF6B7280);
@@ -359,7 +357,6 @@ class _MonthToDetailPageState extends State<MonthToDetailPage> {
               ),
             ),
 
-            // ===== BODY =====
             Expanded(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 240),
@@ -402,8 +399,6 @@ class _MonthHint extends StatelessWidget {
     );
   }
 }
-
-// ===== UI atoms =====
 
 class _ChevronButton extends StatelessWidget {
   const _ChevronButton({required this.icon, required this.onTap});
