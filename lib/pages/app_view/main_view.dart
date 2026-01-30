@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:timecraft/auth/session_cubit.dart';
+import 'package:timecraft/components/draggable_button.dart';
 import 'package:timecraft/l10n/app_localizations.dart';
 import 'package:timecraft/model/task_instance.dart';
 import 'package:timecraft/model/task_pattern.dart';
@@ -120,9 +121,7 @@ class MainView extends StatelessWidget {
               );
             },
           ),
-          floatingActionButton: FloatingActionButton.extended(
-            icon: const Icon(Icons.add),
-            label: Text(strings.newTask),
+          floatingActionButton: DraggableButton(
             onPressed: () async {
               TaskPattern? pattern = await AddTaskSheetMultiStep.show(context);
               if (pattern != null && context.mounted) {
@@ -139,6 +138,25 @@ class MainView extends StatelessWidget {
               // );
             },
           ),
+          // floatingActionButton: FloatingActionButton.extended(
+          //   icon: const Icon(Icons.add),
+          //   label: Text(strings.newTask),
+          //   onPressed: () async {
+          //     TaskPattern? pattern = await AddTaskSheetMultiStep.show(context);
+          //     if (pattern != null && context.mounted) {
+          //       context.read<TaskRepo>().upsertPattern(pattern);
+          //     }
+          //     // await showModalBottomSheet(
+          //     //   context: context,
+          //     //   isScrollControlled: true,
+          //     //   useSafeArea: true,
+          //     //   backgroundColor: Colors.transparent,
+          //     //   builder: (ctx) => AddTaskSheetMultiStep(
+          //     //     onSubmit: context.read<TaskRepo>().createPattern,
+          //     //   ),
+          //     // );
+          //   },
+          // ),
         );
       },
     );
