@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:timecraft/model/completion.dart';
 import 'package:timecraft/model/noti_reminder.dart';
@@ -160,4 +162,58 @@ class TaskPattern {
       updatedAt: Value(updatedAt),
     );
   }
+
+  String toJson() => jsonEncode(toMap());
+
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'title': title,
+    'completion': completion.toJson(),
+    'description': description,
+    'startTime': startTime?.toIso8601String(),
+    'duration': duration?.inMilliseconds,
+    'rrule': rrule?.toString(),
+    'tags': tags.join(';'),
+    'priority': priority,
+    'reminders': reminders.map((e) => e.toJson()).join(';'),
+    'subTasks': subTasks.join(';'),
+    'deleted': deleted,
+    'rev': rev,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
+
+  static TaskPattern fromJson(String m) =>
+      fromMap(jsonDecode(m) as Map<String, dynamic>);
+
+  static TaskPattern fromMap(Map<String, dynamic> map) => TaskPattern(
+    id: map['id'],
+    title: map['title'],
+    completion: Completion.fromJson(map['completion'])!,
+    description: map['description'] ?? '',
+    startTime: map['startTime'] != null
+        ? DateTime.parse(map['startTime'])
+        : null,
+    duration: map['duration'] != null
+        ? Duration(milliseconds: map['duration'])
+        : null,
+    rrule: map['rrule'] != null
+        ? RecurrenceRule.fromString(map['rrule'])
+        : null,
+    tags: map['tags'] != null ? (map['tags'] as String).split(';') : [],
+    priority: map['priority'],
+    reminders: map['reminders'] != null && map['reminders'].isNotEmpty
+        ? (map['reminders'] as String)
+              .split(';')
+              .map((e) => NotiReminder.fromJson(e)!)
+              .toList()
+        : [],
+    subTasks: map['subTasks'] != null && map['subTasks'].isNotEmpty
+        ? (map['subTasks'] as String).split(';')
+        : [],
+    deleted: map['deleted'] ?? false,
+    rev: map['rev'] ?? 0,
+    createdAt: DateTime.parse(map['createdAt']),
+    updatedAt: DateTime.parse(map['updatedAt']),
+  );
 }

@@ -91,6 +91,7 @@ class CalendarCubit extends Cubit<CalendarState> {
           offset,
           newDuration,
           fromWeekday: inst.startTime?.weekday,
+          rid: inst.rid,
         );
         break;
     }

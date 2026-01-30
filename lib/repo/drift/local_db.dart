@@ -4,10 +4,12 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:timecraft/repo/drift/tasks/dao/materialization_state_dao.dart';
+import 'package:timecraft/repo/drift/tasks/dao/outbox_dao.dart';
 import 'package:timecraft/repo/drift/tasks/dao/task_instance_dao.dart';
 import 'package:timecraft/repo/drift/tasks/dao/task_override_dao.dart';
 import 'package:timecraft/repo/drift/tasks/dao/task_pattern_dao.dart';
 import 'package:timecraft/repo/drift/tasks/tables/materialization_state.dart';
+import 'package:timecraft/repo/drift/tasks/tables/outbox.dart';
 import 'package:timecraft/repo/drift/tasks/tables/task_pattern.dart';
 import 'package:timecraft/repo/drift/tasks/tables/task_override.dart';
 import 'package:timecraft/repo/drift/tasks/tables/task_instance.dart';
@@ -15,26 +17,38 @@ import 'package:timecraft/repo/drift/tasks/tables/task_instance.dart';
 part 'local_db.g.dart';
 
 @DriftDatabase(
-  tables: [TaskInstances, TaskPatterns, TaskOverrides, MaterializationStates],
+  tables: [
+    TaskInstances,
+    TaskPatterns,
+    TaskOverrides,
+    MaterializationStates,
+    Outbox,
+  ],
   daos: [
     TaskInstanceDao,
     TaskPatternDao,
     TaskOverrideDao,
     MaterializationStateDao,
+    OutboxDao,
   ],
 )
 class LocalDB extends _$LocalDB {
   LocalDB() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) async {
       await m.createAll();
     },
-    onUpgrade: (m, from, to) async {},
+    onUpgrade: (m, from, to) async {
+      for (final table in allTables) {
+        await m.deleteTable(table.actualTableName);
+      }
+      await m.createAll();
+    },
   );
 
   static QueryExecutor _openConnection() {

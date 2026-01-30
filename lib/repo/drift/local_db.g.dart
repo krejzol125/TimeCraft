@@ -1932,6 +1932,16 @@ class $TaskOverridesTable extends TaskOverrides
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _revMeta = const VerificationMeta('rev');
+  @override
+  late final GeneratedColumn<int> rev = GeneratedColumn<int>(
+    'rev',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _deletedMeta = const VerificationMeta(
     'deleted',
   );
@@ -1984,6 +1994,7 @@ class $TaskOverridesTable extends TaskOverrides
     priority,
     reminders,
     subTasks,
+    rev,
     deleted,
     createdAt,
     updatedAt,
@@ -2079,6 +2090,12 @@ class $TaskOverridesTable extends TaskOverrides
         subTasks.isAcceptableOrUnknown(data['sub_tasks']!, _subTasksMeta),
       );
     }
+    if (data.containsKey('rev')) {
+      context.handle(
+        _revMeta,
+        rev.isAcceptableOrUnknown(data['rev']!, _revMeta),
+      );
+    }
     if (data.containsKey('deleted')) {
       context.handle(
         _deletedMeta,
@@ -2154,6 +2171,10 @@ class $TaskOverridesTable extends TaskOverrides
         DriftSqlType.string,
         data['${effectivePrefix}sub_tasks'],
       ),
+      rev: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rev'],
+      )!,
       deleted: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}deleted'],
@@ -2189,6 +2210,7 @@ class TaskOverrideEntry extends DataClass
   final int? priority;
   final String? reminders;
   final String? subTasks;
+  final int rev;
   final bool? deleted;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -2205,6 +2227,7 @@ class TaskOverrideEntry extends DataClass
     this.priority,
     this.reminders,
     this.subTasks,
+    required this.rev,
     this.deleted,
     required this.createdAt,
     required this.updatedAt,
@@ -2244,6 +2267,7 @@ class TaskOverrideEntry extends DataClass
     if (!nullToAbsent || subTasks != null) {
       map['sub_tasks'] = Variable<String>(subTasks);
     }
+    map['rev'] = Variable<int>(rev);
     if (!nullToAbsent || deleted != null) {
       map['deleted'] = Variable<bool>(deleted);
     }
@@ -2284,6 +2308,7 @@ class TaskOverrideEntry extends DataClass
       subTasks: subTasks == null && nullToAbsent
           ? const Value.absent()
           : Value(subTasks),
+      rev: Value(rev),
       deleted: deleted == null && nullToAbsent
           ? const Value.absent()
           : Value(deleted),
@@ -2310,6 +2335,7 @@ class TaskOverrideEntry extends DataClass
       priority: serializer.fromJson<int?>(json['priority']),
       reminders: serializer.fromJson<String?>(json['reminders']),
       subTasks: serializer.fromJson<String?>(json['subTasks']),
+      rev: serializer.fromJson<int>(json['rev']),
       deleted: serializer.fromJson<bool?>(json['deleted']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -2331,6 +2357,7 @@ class TaskOverrideEntry extends DataClass
       'priority': serializer.toJson<int?>(priority),
       'reminders': serializer.toJson<String?>(reminders),
       'subTasks': serializer.toJson<String?>(subTasks),
+      'rev': serializer.toJson<int>(rev),
       'deleted': serializer.toJson<bool?>(deleted),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -2350,6 +2377,7 @@ class TaskOverrideEntry extends DataClass
     Value<int?> priority = const Value.absent(),
     Value<String?> reminders = const Value.absent(),
     Value<String?> subTasks = const Value.absent(),
+    int? rev,
     Value<bool?> deleted = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -2366,6 +2394,7 @@ class TaskOverrideEntry extends DataClass
     priority: priority.present ? priority.value : this.priority,
     reminders: reminders.present ? reminders.value : this.reminders,
     subTasks: subTasks.present ? subTasks.value : this.subTasks,
+    rev: rev ?? this.rev,
     deleted: deleted.present ? deleted.value : this.deleted,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -2388,6 +2417,7 @@ class TaskOverrideEntry extends DataClass
       priority: data.priority.present ? data.priority.value : this.priority,
       reminders: data.reminders.present ? data.reminders.value : this.reminders,
       subTasks: data.subTasks.present ? data.subTasks.value : this.subTasks,
+      rev: data.rev.present ? data.rev.value : this.rev,
       deleted: data.deleted.present ? data.deleted.value : this.deleted,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -2409,6 +2439,7 @@ class TaskOverrideEntry extends DataClass
           ..write('priority: $priority, ')
           ..write('reminders: $reminders, ')
           ..write('subTasks: $subTasks, ')
+          ..write('rev: $rev, ')
           ..write('deleted: $deleted, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -2430,6 +2461,7 @@ class TaskOverrideEntry extends DataClass
     priority,
     reminders,
     subTasks,
+    rev,
     deleted,
     createdAt,
     updatedAt,
@@ -2450,6 +2482,7 @@ class TaskOverrideEntry extends DataClass
           other.priority == this.priority &&
           other.reminders == this.reminders &&
           other.subTasks == this.subTasks &&
+          other.rev == this.rev &&
           other.deleted == this.deleted &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -2468,6 +2501,7 @@ class TaskOverridesCompanion extends UpdateCompanion<TaskOverrideEntry> {
   final Value<int?> priority;
   final Value<String?> reminders;
   final Value<String?> subTasks;
+  final Value<int> rev;
   final Value<bool?> deleted;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -2485,6 +2519,7 @@ class TaskOverridesCompanion extends UpdateCompanion<TaskOverrideEntry> {
     this.priority = const Value.absent(),
     this.reminders = const Value.absent(),
     this.subTasks = const Value.absent(),
+    this.rev = const Value.absent(),
     this.deleted = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -2503,6 +2538,7 @@ class TaskOverridesCompanion extends UpdateCompanion<TaskOverrideEntry> {
     this.priority = const Value.absent(),
     this.reminders = const Value.absent(),
     this.subTasks = const Value.absent(),
+    this.rev = const Value.absent(),
     this.deleted = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -2522,6 +2558,7 @@ class TaskOverridesCompanion extends UpdateCompanion<TaskOverrideEntry> {
     Expression<int>? priority,
     Expression<String>? reminders,
     Expression<String>? subTasks,
+    Expression<int>? rev,
     Expression<bool>? deleted,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -2540,6 +2577,7 @@ class TaskOverridesCompanion extends UpdateCompanion<TaskOverrideEntry> {
       if (priority != null) 'priority': priority,
       if (reminders != null) 'reminders': reminders,
       if (subTasks != null) 'sub_tasks': subTasks,
+      if (rev != null) 'rev': rev,
       if (deleted != null) 'deleted': deleted,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -2560,6 +2598,7 @@ class TaskOverridesCompanion extends UpdateCompanion<TaskOverrideEntry> {
     Value<int?>? priority,
     Value<String?>? reminders,
     Value<String?>? subTasks,
+    Value<int>? rev,
     Value<bool?>? deleted,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -2578,6 +2617,7 @@ class TaskOverridesCompanion extends UpdateCompanion<TaskOverrideEntry> {
       priority: priority ?? this.priority,
       reminders: reminders ?? this.reminders,
       subTasks: subTasks ?? this.subTasks,
+      rev: rev ?? this.rev,
       deleted: deleted ?? this.deleted,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -2624,6 +2664,9 @@ class TaskOverridesCompanion extends UpdateCompanion<TaskOverrideEntry> {
     if (subTasks.present) {
       map['sub_tasks'] = Variable<String>(subTasks.value);
     }
+    if (rev.present) {
+      map['rev'] = Variable<int>(rev.value);
+    }
     if (deleted.present) {
       map['deleted'] = Variable<bool>(deleted.value);
     }
@@ -2654,6 +2697,7 @@ class TaskOverridesCompanion extends UpdateCompanion<TaskOverrideEntry> {
           ..write('priority: $priority, ')
           ..write('reminders: $reminders, ')
           ..write('subTasks: $subTasks, ')
+          ..write('rev: $rev, ')
           ..write('deleted: $deleted, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -2985,6 +3029,474 @@ class MaterializationStatesCompanion
   }
 }
 
+class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OutboxTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uidMeta = const VerificationMeta('uid');
+  @override
+  late final GeneratedColumn<String> uid = GeneratedColumn<String>(
+    'uid',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entityTypeMeta = const VerificationMeta(
+    'entityType',
+  );
+  @override
+  late final GeneratedColumn<String> entityType = GeneratedColumn<String>(
+    'entity_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entityKeyMeta = const VerificationMeta(
+    'entityKey',
+  );
+  @override
+  late final GeneratedColumn<String> entityKey = GeneratedColumn<String>(
+    'entity_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _revMeta = const VerificationMeta('rev');
+  @override
+  late final GeneratedColumn<int> rev = GeneratedColumn<int>(
+    'rev',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadJsonMeta = const VerificationMeta(
+    'payloadJson',
+  );
+  @override
+  late final GeneratedColumn<String> payloadJson = GeneratedColumn<String>(
+    'payload_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _sentMeta = const VerificationMeta('sent');
+  @override
+  late final GeneratedColumn<bool> sent = GeneratedColumn<bool>(
+    'sent',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("sent" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    uid,
+    entityType,
+    entityKey,
+    rev,
+    payloadJson,
+    createdAt,
+    sent,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'outbox';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<OutboxEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uid')) {
+      context.handle(
+        _uidMeta,
+        uid.isAcceptableOrUnknown(data['uid']!, _uidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uidMeta);
+    }
+    if (data.containsKey('entity_type')) {
+      context.handle(
+        _entityTypeMeta,
+        entityType.isAcceptableOrUnknown(data['entity_type']!, _entityTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entityTypeMeta);
+    }
+    if (data.containsKey('entity_key')) {
+      context.handle(
+        _entityKeyMeta,
+        entityKey.isAcceptableOrUnknown(data['entity_key']!, _entityKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entityKeyMeta);
+    }
+    if (data.containsKey('rev')) {
+      context.handle(
+        _revMeta,
+        rev.isAcceptableOrUnknown(data['rev']!, _revMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_revMeta);
+    }
+    if (data.containsKey('payload_json')) {
+      context.handle(
+        _payloadJsonMeta,
+        payloadJson.isAcceptableOrUnknown(
+          data['payload_json']!,
+          _payloadJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadJsonMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('sent')) {
+      context.handle(
+        _sentMeta,
+        sent.isAcceptableOrUnknown(data['sent']!, _sentMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {entityKey};
+  @override
+  OutboxEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OutboxEntry(
+      uid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uid'],
+      )!,
+      entityType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_type'],
+      )!,
+      entityKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_key'],
+      )!,
+      rev: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rev'],
+      )!,
+      payloadJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_json'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      sent: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}sent'],
+      )!,
+    );
+  }
+
+  @override
+  $OutboxTable createAlias(String alias) {
+    return $OutboxTable(attachedDatabase, alias);
+  }
+}
+
+class OutboxEntry extends DataClass implements Insertable<OutboxEntry> {
+  final String uid;
+  final String entityType;
+  final String entityKey;
+  final int rev;
+  final String payloadJson;
+  final DateTime createdAt;
+  final bool sent;
+  const OutboxEntry({
+    required this.uid,
+    required this.entityType,
+    required this.entityKey,
+    required this.rev,
+    required this.payloadJson,
+    required this.createdAt,
+    required this.sent,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uid'] = Variable<String>(uid);
+    map['entity_type'] = Variable<String>(entityType);
+    map['entity_key'] = Variable<String>(entityKey);
+    map['rev'] = Variable<int>(rev);
+    map['payload_json'] = Variable<String>(payloadJson);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['sent'] = Variable<bool>(sent);
+    return map;
+  }
+
+  OutboxCompanion toCompanion(bool nullToAbsent) {
+    return OutboxCompanion(
+      uid: Value(uid),
+      entityType: Value(entityType),
+      entityKey: Value(entityKey),
+      rev: Value(rev),
+      payloadJson: Value(payloadJson),
+      createdAt: Value(createdAt),
+      sent: Value(sent),
+    );
+  }
+
+  factory OutboxEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OutboxEntry(
+      uid: serializer.fromJson<String>(json['uid']),
+      entityType: serializer.fromJson<String>(json['entityType']),
+      entityKey: serializer.fromJson<String>(json['entityKey']),
+      rev: serializer.fromJson<int>(json['rev']),
+      payloadJson: serializer.fromJson<String>(json['payloadJson']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      sent: serializer.fromJson<bool>(json['sent']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uid': serializer.toJson<String>(uid),
+      'entityType': serializer.toJson<String>(entityType),
+      'entityKey': serializer.toJson<String>(entityKey),
+      'rev': serializer.toJson<int>(rev),
+      'payloadJson': serializer.toJson<String>(payloadJson),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'sent': serializer.toJson<bool>(sent),
+    };
+  }
+
+  OutboxEntry copyWith({
+    String? uid,
+    String? entityType,
+    String? entityKey,
+    int? rev,
+    String? payloadJson,
+    DateTime? createdAt,
+    bool? sent,
+  }) => OutboxEntry(
+    uid: uid ?? this.uid,
+    entityType: entityType ?? this.entityType,
+    entityKey: entityKey ?? this.entityKey,
+    rev: rev ?? this.rev,
+    payloadJson: payloadJson ?? this.payloadJson,
+    createdAt: createdAt ?? this.createdAt,
+    sent: sent ?? this.sent,
+  );
+  OutboxEntry copyWithCompanion(OutboxCompanion data) {
+    return OutboxEntry(
+      uid: data.uid.present ? data.uid.value : this.uid,
+      entityType: data.entityType.present
+          ? data.entityType.value
+          : this.entityType,
+      entityKey: data.entityKey.present ? data.entityKey.value : this.entityKey,
+      rev: data.rev.present ? data.rev.value : this.rev,
+      payloadJson: data.payloadJson.present
+          ? data.payloadJson.value
+          : this.payloadJson,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      sent: data.sent.present ? data.sent.value : this.sent,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OutboxEntry(')
+          ..write('uid: $uid, ')
+          ..write('entityType: $entityType, ')
+          ..write('entityKey: $entityKey, ')
+          ..write('rev: $rev, ')
+          ..write('payloadJson: $payloadJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('sent: $sent')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    uid,
+    entityType,
+    entityKey,
+    rev,
+    payloadJson,
+    createdAt,
+    sent,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OutboxEntry &&
+          other.uid == this.uid &&
+          other.entityType == this.entityType &&
+          other.entityKey == this.entityKey &&
+          other.rev == this.rev &&
+          other.payloadJson == this.payloadJson &&
+          other.createdAt == this.createdAt &&
+          other.sent == this.sent);
+}
+
+class OutboxCompanion extends UpdateCompanion<OutboxEntry> {
+  final Value<String> uid;
+  final Value<String> entityType;
+  final Value<String> entityKey;
+  final Value<int> rev;
+  final Value<String> payloadJson;
+  final Value<DateTime> createdAt;
+  final Value<bool> sent;
+  final Value<int> rowid;
+  const OutboxCompanion({
+    this.uid = const Value.absent(),
+    this.entityType = const Value.absent(),
+    this.entityKey = const Value.absent(),
+    this.rev = const Value.absent(),
+    this.payloadJson = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.sent = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  OutboxCompanion.insert({
+    required String uid,
+    required String entityType,
+    required String entityKey,
+    required int rev,
+    required String payloadJson,
+    this.createdAt = const Value.absent(),
+    this.sent = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : uid = Value(uid),
+       entityType = Value(entityType),
+       entityKey = Value(entityKey),
+       rev = Value(rev),
+       payloadJson = Value(payloadJson);
+  static Insertable<OutboxEntry> custom({
+    Expression<String>? uid,
+    Expression<String>? entityType,
+    Expression<String>? entityKey,
+    Expression<int>? rev,
+    Expression<String>? payloadJson,
+    Expression<DateTime>? createdAt,
+    Expression<bool>? sent,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uid != null) 'uid': uid,
+      if (entityType != null) 'entity_type': entityType,
+      if (entityKey != null) 'entity_key': entityKey,
+      if (rev != null) 'rev': rev,
+      if (payloadJson != null) 'payload_json': payloadJson,
+      if (createdAt != null) 'created_at': createdAt,
+      if (sent != null) 'sent': sent,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  OutboxCompanion copyWith({
+    Value<String>? uid,
+    Value<String>? entityType,
+    Value<String>? entityKey,
+    Value<int>? rev,
+    Value<String>? payloadJson,
+    Value<DateTime>? createdAt,
+    Value<bool>? sent,
+    Value<int>? rowid,
+  }) {
+    return OutboxCompanion(
+      uid: uid ?? this.uid,
+      entityType: entityType ?? this.entityType,
+      entityKey: entityKey ?? this.entityKey,
+      rev: rev ?? this.rev,
+      payloadJson: payloadJson ?? this.payloadJson,
+      createdAt: createdAt ?? this.createdAt,
+      sent: sent ?? this.sent,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uid.present) {
+      map['uid'] = Variable<String>(uid.value);
+    }
+    if (entityType.present) {
+      map['entity_type'] = Variable<String>(entityType.value);
+    }
+    if (entityKey.present) {
+      map['entity_key'] = Variable<String>(entityKey.value);
+    }
+    if (rev.present) {
+      map['rev'] = Variable<int>(rev.value);
+    }
+    if (payloadJson.present) {
+      map['payload_json'] = Variable<String>(payloadJson.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (sent.present) {
+      map['sent'] = Variable<bool>(sent.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OutboxCompanion(')
+          ..write('uid: $uid, ')
+          ..write('entityType: $entityType, ')
+          ..write('entityKey: $entityKey, ')
+          ..write('rev: $rev, ')
+          ..write('payloadJson: $payloadJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('sent: $sent, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$LocalDB extends GeneratedDatabase {
   _$LocalDB(QueryExecutor e) : super(e);
   $LocalDBManager get managers => $LocalDBManager(this);
@@ -2993,6 +3505,7 @@ abstract class _$LocalDB extends GeneratedDatabase {
   late final $TaskOverridesTable taskOverrides = $TaskOverridesTable(this);
   late final $MaterializationStatesTable materializationStates =
       $MaterializationStatesTable(this);
+  late final $OutboxTable outbox = $OutboxTable(this);
   late final Index ridIndex = Index(
     'rid_index',
     'CREATE INDEX rid_index ON task_instances (start_time)',
@@ -3002,6 +3515,7 @@ abstract class _$LocalDB extends GeneratedDatabase {
   late final TaskOverrideDao taskOverrideDao = TaskOverrideDao(this as LocalDB);
   late final MaterializationStateDao materializationStateDao =
       MaterializationStateDao(this as LocalDB);
+  late final OutboxDao outboxDao = OutboxDao(this as LocalDB);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3011,6 +3525,7 @@ abstract class _$LocalDB extends GeneratedDatabase {
     taskInstances,
     taskOverrides,
     materializationStates,
+    outbox,
     ridIndex,
   ];
 }
@@ -4185,6 +4700,7 @@ typedef $$TaskOverridesTableCreateCompanionBuilder =
       Value<int?> priority,
       Value<String?> reminders,
       Value<String?> subTasks,
+      Value<int> rev,
       Value<bool?> deleted,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -4204,6 +4720,7 @@ typedef $$TaskOverridesTableUpdateCompanionBuilder =
       Value<int?> priority,
       Value<String?> reminders,
       Value<String?> subTasks,
+      Value<int> rev,
       Value<bool?> deleted,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -4299,6 +4816,11 @@ class $$TaskOverridesTableFilterComposer
 
   ColumnFilters<String> get subTasks => $composableBuilder(
     column: $table.subTasks,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get rev => $composableBuilder(
+    column: $table.rev,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4405,6 +4927,11 @@ class $$TaskOverridesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get rev => $composableBuilder(
+    column: $table.rev,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get deleted => $composableBuilder(
     column: $table.deleted,
     builder: (column) => ColumnOrderings(column),
@@ -4490,6 +5017,9 @@ class $$TaskOverridesTableAnnotationComposer
   GeneratedColumn<String> get subTasks =>
       $composableBuilder(column: $table.subTasks, builder: (column) => column);
 
+  GeneratedColumn<int> get rev =>
+      $composableBuilder(column: $table.rev, builder: (column) => column);
+
   GeneratedColumn<bool> get deleted =>
       $composableBuilder(column: $table.deleted, builder: (column) => column);
 
@@ -4563,6 +5093,7 @@ class $$TaskOverridesTableTableManager
                 Value<int?> priority = const Value.absent(),
                 Value<String?> reminders = const Value.absent(),
                 Value<String?> subTasks = const Value.absent(),
+                Value<int> rev = const Value.absent(),
                 Value<bool?> deleted = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -4580,6 +5111,7 @@ class $$TaskOverridesTableTableManager
                 priority: priority,
                 reminders: reminders,
                 subTasks: subTasks,
+                rev: rev,
                 deleted: deleted,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -4599,6 +5131,7 @@ class $$TaskOverridesTableTableManager
                 Value<int?> priority = const Value.absent(),
                 Value<String?> reminders = const Value.absent(),
                 Value<String?> subTasks = const Value.absent(),
+                Value<int> rev = const Value.absent(),
                 Value<bool?> deleted = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -4616,6 +5149,7 @@ class $$TaskOverridesTableTableManager
                 priority: priority,
                 reminders: reminders,
                 subTasks: subTasks,
+                rev: rev,
                 deleted: deleted,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -4890,6 +5424,240 @@ typedef $$MaterializationStatesTableProcessedTableManager =
       MaterializationStateEntry,
       PrefetchHooks Function()
     >;
+typedef $$OutboxTableCreateCompanionBuilder =
+    OutboxCompanion Function({
+      required String uid,
+      required String entityType,
+      required String entityKey,
+      required int rev,
+      required String payloadJson,
+      Value<DateTime> createdAt,
+      Value<bool> sent,
+      Value<int> rowid,
+    });
+typedef $$OutboxTableUpdateCompanionBuilder =
+    OutboxCompanion Function({
+      Value<String> uid,
+      Value<String> entityType,
+      Value<String> entityKey,
+      Value<int> rev,
+      Value<String> payloadJson,
+      Value<DateTime> createdAt,
+      Value<bool> sent,
+      Value<int> rowid,
+    });
+
+class $$OutboxTableFilterComposer extends Composer<_$LocalDB, $OutboxTable> {
+  $$OutboxTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uid => $composableBuilder(
+    column: $table.uid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entityKey => $composableBuilder(
+    column: $table.entityKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get rev => $composableBuilder(
+    column: $table.rev,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get sent => $composableBuilder(
+    column: $table.sent,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$OutboxTableOrderingComposer extends Composer<_$LocalDB, $OutboxTable> {
+  $$OutboxTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uid => $composableBuilder(
+    column: $table.uid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entityKey => $composableBuilder(
+    column: $table.entityKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get rev => $composableBuilder(
+    column: $table.rev,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get sent => $composableBuilder(
+    column: $table.sent,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$OutboxTableAnnotationComposer
+    extends Composer<_$LocalDB, $OutboxTable> {
+  $$OutboxTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uid =>
+      $composableBuilder(column: $table.uid, builder: (column) => column);
+
+  GeneratedColumn<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get entityKey =>
+      $composableBuilder(column: $table.entityKey, builder: (column) => column);
+
+  GeneratedColumn<int> get rev =>
+      $composableBuilder(column: $table.rev, builder: (column) => column);
+
+  GeneratedColumn<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get sent =>
+      $composableBuilder(column: $table.sent, builder: (column) => column);
+}
+
+class $$OutboxTableTableManager
+    extends
+        RootTableManager<
+          _$LocalDB,
+          $OutboxTable,
+          OutboxEntry,
+          $$OutboxTableFilterComposer,
+          $$OutboxTableOrderingComposer,
+          $$OutboxTableAnnotationComposer,
+          $$OutboxTableCreateCompanionBuilder,
+          $$OutboxTableUpdateCompanionBuilder,
+          (OutboxEntry, BaseReferences<_$LocalDB, $OutboxTable, OutboxEntry>),
+          OutboxEntry,
+          PrefetchHooks Function()
+        > {
+  $$OutboxTableTableManager(_$LocalDB db, $OutboxTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$OutboxTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$OutboxTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$OutboxTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> uid = const Value.absent(),
+                Value<String> entityType = const Value.absent(),
+                Value<String> entityKey = const Value.absent(),
+                Value<int> rev = const Value.absent(),
+                Value<String> payloadJson = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<bool> sent = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OutboxCompanion(
+                uid: uid,
+                entityType: entityType,
+                entityKey: entityKey,
+                rev: rev,
+                payloadJson: payloadJson,
+                createdAt: createdAt,
+                sent: sent,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String uid,
+                required String entityType,
+                required String entityKey,
+                required int rev,
+                required String payloadJson,
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<bool> sent = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OutboxCompanion.insert(
+                uid: uid,
+                entityType: entityType,
+                entityKey: entityKey,
+                rev: rev,
+                payloadJson: payloadJson,
+                createdAt: createdAt,
+                sent: sent,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$OutboxTableProcessedTableManager =
+    ProcessedTableManager<
+      _$LocalDB,
+      $OutboxTable,
+      OutboxEntry,
+      $$OutboxTableFilterComposer,
+      $$OutboxTableOrderingComposer,
+      $$OutboxTableAnnotationComposer,
+      $$OutboxTableCreateCompanionBuilder,
+      $$OutboxTableUpdateCompanionBuilder,
+      (OutboxEntry, BaseReferences<_$LocalDB, $OutboxTable, OutboxEntry>),
+      OutboxEntry,
+      PrefetchHooks Function()
+    >;
 
 class $LocalDBManager {
   final _$LocalDB _db;
@@ -4902,4 +5670,6 @@ class $LocalDBManager {
       $$TaskOverridesTableTableManager(_db, _db.taskOverrides);
   $$MaterializationStatesTableTableManager get materializationStates =>
       $$MaterializationStatesTableTableManager(_db, _db.materializationStates);
+  $$OutboxTableTableManager get outbox =>
+      $$OutboxTableTableManager(_db, _db.outbox);
 }

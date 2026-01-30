@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:timecraft/model/completion.dart';
 import 'package:timecraft/model/noti_reminder.dart';
@@ -24,6 +26,7 @@ class TaskOverride {
   List<NotiReminder>? reminders;
   List<(String name, bool completed)>? subTasks;
 
+  int rev = 0;
   bool? deleted = false;
 
   DateTime createdAt;
@@ -41,6 +44,7 @@ class TaskOverride {
     this.priority,
     this.reminders,
     this.subTasks,
+    this.rev = 0,
     this.deleted = false,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -59,6 +63,7 @@ class TaskOverride {
     this.priority,
     this.reminders,
     this.subTasks,
+    this.rev = 0,
     this.deleted = false,
   }) : taskId = tp.id,
        createdAt = tp.createdAt,
@@ -75,6 +80,7 @@ class TaskOverride {
     List<String>? tags,
     int? priority,
     List<NotiReminder>? reminders,
+    int? rev,
     bool? deleted,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -92,6 +98,7 @@ class TaskOverride {
       priority: priority ?? this.priority,
       reminders: reminders ?? this.reminders,
       subTasks: subTasks ?? this.subTasks,
+      rev: rev ?? this.rev,
       deleted: deleted ?? this.deleted,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -126,6 +133,7 @@ class TaskOverride {
               return (parts[0], parts[1].toLowerCase() == 'true');
             }).toList()
           : null,
+      rev = entry.rev,
       deleted = entry.deleted,
       createdAt = entry.createdAt,
       updatedAt = entry.updatedAt;
@@ -143,6 +151,7 @@ class TaskOverride {
       priority: Value(priority),
       reminders: Value(reminders?.map((e) => e.toJson()).join(';')),
       subTasks: Value(subTasks?.map((e) => '${e.$1},${e.$2}').join(';')),
+      rev: Value(rev),
       deleted: Value(deleted),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -161,7 +170,71 @@ class TaskOverride {
     if (override.reminders != null) reminders = override.reminders;
     if (override.subTasks != null) subTasks = override.subTasks;
     if (override.deleted != null) deleted = override.deleted;
+    rev = override.rev;
     updatedAt = DateTime.now();
     return this;
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'taskId': taskId,
+      'rid': rid.toIso8601String(),
+      'title': title,
+      'completion': completion?.toJson(),
+      'description': description,
+      'startTime': startTime?.toIso8601String(),
+      'duration': duration?.inMilliseconds,
+      'tags': tags?.join(';'),
+      'priority': priority,
+      'reminders': reminders?.map((e) => e.toJson()).join(';'),
+      'subTasks': subTasks?.map((e) => '${e.$1},${e.$2}').join(';'),
+      'rev': rev,
+      'deleted': deleted,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
+
+  static TaskOverride fromMap(Map<String, dynamic> map) {
+    return TaskOverride(
+      taskId: map['taskId'],
+      rid: DateTime.parse(map['rid']),
+      title: map['title'],
+      completion: map['completion'] != null
+          ? Completion.fromJson(map['completion'])
+          : null,
+      description: map['description'],
+      startTime: map['startTime'] != null
+          ? DateTime.parse(map['startTime'])
+          : null,
+      duration: map['duration'] != null
+          ? Duration(milliseconds: map['duration'])
+          : null,
+      tags: map['tags'] != null ? (map['tags'] as String).split(';') : null,
+      priority: map['priority'],
+      reminders: map['reminders'] != null && map['reminders'].isNotEmpty
+          ? (map['reminders'] as String)
+                .split(';')
+                .map((e) => NotiReminder.fromJson(e)!)
+                .toList()
+          : null,
+      subTasks: map['subTasks'] != null && map['subTasks'].isNotEmpty
+          ? List<(String, bool)>.from(
+              (map['subTasks'] as String).split(';').map((e) {
+                final parts = e.split(',');
+                return (parts[0], parts[1].toLowerCase() == 'true');
+              }).toList(),
+            )
+          : null,
+      rev: map['rev'],
+      deleted: map['deleted'],
+      createdAt: DateTime.parse(map['createdAt']),
+      updatedAt: DateTime.parse(map['updatedAt']),
+    );
+  }
+
+  String toJson() => jsonEncode(toMap());
+
+  static TaskOverride fromJson(String m) =>
+      fromMap(jsonDecode(m) as Map<String, dynamic>);
 }

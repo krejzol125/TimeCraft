@@ -122,9 +122,9 @@ class MaterializationWorker {
     if (!shouldRematerialize) {
       return;
     }
-    print(
-      'Rematerializing task ${pattern.title} with rev ${pattern.rev} and ${overrides.length} overrides',
-    );
+    // print(
+    //   'Rematerializing task ${pattern.title} with rev ${pattern.rev} and ${overrides.length} overrides',
+    // );
 
     final newState = MaterializationState(
       taskId: taskId,
@@ -135,9 +135,9 @@ class MaterializationWorker {
     await _materializationStateDao.upsertState(newState);
 
     if (pattern.rrule == null) {
-      print(
-        'Materializing single instance for pattern ${pattern.title} with startTime ${pattern.startTime}',
-      );
+      // print(
+      //   'Materializing single instance for pattern ${pattern.title} with startTime ${pattern.startTime}',
+      // );
       await _taskInstanceDao.replaceInstancesForPattern(taskId, [
         TaskInstance.fromPattern(
           pattern,
@@ -154,7 +154,7 @@ class MaterializationWorker {
     }
 
     List<DateTime> materializedDates = pattern.rrule!.getAllInstances(
-      start: pattern.startTime!.copyWith(isUtc: true), // TODO utc
+      start: pattern.startTime!.copyWith(isUtc: true),
       after: materializedFrom.isBefore(pattern.startTime!)
           ? pattern.startTime!.copyWith(isUtc: true)
           : materializedFrom.copyWith(isUtc: true),
@@ -166,14 +166,12 @@ class MaterializationWorker {
         .map((dt) {
           TaskOverride? override =
               overrideMap[dt.copyWith(isUtc: false).toIso8601String()];
-          if (override != null) {
-            print(
-              'Applying override ${override.rid} for pattern ${pattern.title} at ${dt.copyWith(isUtc: false)}',
-            );
-          }
-          print(
-            'Materializing instance for pattern ${pattern.title} at ${dt.copyWith(isUtc: false)}',
-          );
+          // print(
+          //   'Applying override ${override.rid} for pattern ${pattern.title} at ${dt.copyWith(isUtc: false)}',
+          // );
+          // print(
+          //   'Materializing instance for pattern ${pattern.title} at ${dt.copyWith(isUtc: false)}',
+          // );
           return TaskInstance.fromPattern(
             pattern,
             dt.copyWith(isUtc: false),

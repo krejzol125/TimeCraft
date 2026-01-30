@@ -160,13 +160,15 @@ class _RRulePickerState extends State<RRulePicker> {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Text(_intervalLabel(l10n, _freq, _interval)),
+                          if (MediaQuery.of(context).size.width > 600) ...[
+                            const SizedBox(width: 12),
+                            Text(_intervalLabel(l10n, _freq, _interval)),
+                          ],
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: TcInputDecorator(
                       labelText: l10n.limit,
@@ -350,7 +352,7 @@ class _EndModeRow extends StatelessWidget {
         onTap: () => onChanged(m),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 140),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           decoration: BoxDecoration(
             color: sel
                 ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.10)
@@ -372,7 +374,7 @@ class _EndModeRow extends StatelessWidget {
             style: TextStyle(
               color: sel ? Theme.of(context).colorScheme.primary : Colors.grey,
               fontWeight: FontWeight.w900,
-              fontSize: 11,
+              fontSize: 10,
             ),
           ),
         ),
@@ -381,10 +383,12 @@ class _EndModeRow extends StatelessWidget {
 
     return Row(
       children: [
-        Text(l10n.ends),
-        const Spacer(),
+        if (MediaQuery.of(context).size.width > 600) ...[
+          Text(l10n.ends),
+          const Spacer(),
+        ],
         Wrap(
-          spacing: 8,
+          spacing: 5,
           children: [
             chip(_EndMode.never, l10n.never),
             chip(_EndMode.until, l10n.until),

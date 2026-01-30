@@ -3,6 +3,7 @@ import 'package:timecraft/model/task_instance.dart';
 import 'package:timecraft/model/task_override.dart';
 import 'package:timecraft/model/task_pattern.dart';
 import 'package:timecraft/repo/drift/local_db.dart';
+import 'package:timecraft/repo/drift/tasks/dao/outbox_dao.dart';
 import 'package:timecraft/repo/drift/tasks/dao/task_instance_dao.dart';
 import 'package:timecraft/repo/drift/tasks/dao/task_override_dao.dart';
 import 'package:timecraft/repo/drift/tasks/dao/task_pattern_dao.dart';
@@ -12,12 +13,20 @@ class TaskRepo {
   final TaskInstanceDao _taskInstanceDao;
   final TaskPatternDao _taskPatternDao;
   final TaskOverrideDao _taskOverrideDao;
+  final OutboxDao _outboxDao;
   final MaterializationWorker _materializationWorker;
+  String? _uid;
 
   TaskRepo(LocalDB db, this._materializationWorker)
     : _taskInstanceDao = TaskInstanceDao(db),
       _taskPatternDao = TaskPatternDao(db),
-      _taskOverrideDao = TaskOverrideDao(db);
+      _taskOverrideDao = TaskOverrideDao(db),
+      _outboxDao = OutboxDao(db);
+
+  void setUser(String? uid) => _uid = uid;
+
+  String overrideKey(String taskId, DateTime ridUtc) =>
+      '${taskId}__${ridUtc.toUtc().toIso8601String()}';
 
   // ! Queries
   Future<TaskPattern?> getPatternById(String id) async {
@@ -38,10 +47,32 @@ class TaskRepo {
 
   // ! Create
 
+  // Future<void> upsertPattern(TaskPattern tp) async {
+  //   await _taskPatternDao.upsertPattern(
+  //     tp.copyWith(rev: DateTime.now().millisecondsSinceEpoch),
+  //   );
+  // }
+
   Future<void> upsertPattern(TaskPattern tp) async {
-    await _taskPatternDao.upsertPattern(
-      tp.copyWith(rev: DateTime.now().millisecondsSinceEpoch),
-    );
+    final now = DateTime.now().toUtc();
+    final rev = now.millisecondsSinceEpoch;
+
+    final updated = tp.copyWith(rev: rev, updatedAt: now);
+
+    await _taskPatternDao.transaction(() async {
+      await _taskPatternDao.upsertPattern(updated);
+
+      if (_uid != null) {
+        print('enqueuing pattern update for uid $_uid');
+        await _outboxDao.enqueue(
+          uid: _uid!,
+          entityType: 'pattern',
+          entityKey: updated.id,
+          rev: updated.rev,
+          payloadJson: updated.toJson(),
+        );
+      }
+    });
   }
 
   // Future<void> createOverride(TaskOverride to) async {
@@ -51,16 +82,40 @@ class TaskRepo {
   // ! Update
 
   Future<void> overrideTask(TaskOverride to) async {
+    final now = DateTime.now().toUtc();
+    final rev = now.millisecondsSinceEpoch;
+
     final existing = await _taskOverrideDao.getOverrideById(to.taskId, to.rid);
     if (existing != null) {
       to = existing.add(to);
     }
-    await _taskOverrideDao.upsertOverride(to);
-    _taskPatternDao.markPatternDirty(
-      to.taskId,
-      DateTime.now().millisecondsSinceEpoch,
-    );
+
+    final updated = to.copyWith(updatedAt: now, rev: rev);
+
+    await _taskOverrideDao.transaction(() async {
+      await _taskOverrideDao.upsertOverride(updated);
+
+      await _taskPatternDao.markPatternDirty(to.taskId, rev);
+
+      if (_uid != null) {
+        await _outboxDao.enqueue(
+          uid: _uid!,
+          entityType: 'override',
+          entityKey: overrideKey(updated.taskId, updated.rid),
+          rev: rev,
+          payloadJson: updated.toJson(),
+        );
+      }
+    });
   }
+
+  // Future<void> overrideTask(TaskOverride to) async {
+  //   final existing = await _taskOverrideDao.getOverrideById(to.taskId, to.rid);
+  //   if (existing != null) {
+  //     to = existing.add(to);
+  //   }
+  //   await _upsertOverride(to);
+  // }
 
   Future<void> splitPattern(
     String taskId,
@@ -97,7 +152,7 @@ class TaskRepo {
   ) async {
     TaskPattern? pattern = await _taskPatternDao.getPatternById(taskId);
     if (pattern == null) return;
-    await _taskPatternDao.upsertPattern(
+    await upsertPattern(
       pattern.copyWith(
         startTime: startTime,
         duration: duration,
@@ -111,6 +166,7 @@ class TaskRepo {
     String taskId,
     Duration offset,
     Duration duration, {
+    DateTime? rid,
     int? fromWeekday,
   }) async {
     TaskPattern? pattern = await _taskPatternDao.getPatternById(taskId);
@@ -131,7 +187,7 @@ class TaskRepo {
       );
       print('new rule is $rrule');
 
-      _taskPatternDao.upsertPattern(
+      await upsertPattern(
         pattern.copyWith(
           startTime: startTime,
           duration: duration,
@@ -142,7 +198,16 @@ class TaskRepo {
       );
       return;
     }
-    await _taskPatternDao.upsertPattern(
+    final overrides = await _taskOverrideDao.getOverridesForTask(taskId);
+    for (var ovr in overrides) {
+      TaskOverride newOvr = ovr.copyWith(rid: ovr.rid.add(offset));
+      if (rid != null && ovr.rid.isAtSameMomentAs(rid)) {
+        newOvr.startTime = null;
+        newOvr.duration = null;
+      }
+      await overrideTask(newOvr);
+    }
+    await upsertPattern(
       pattern.copyWith(
         startTime: startTime,
         duration: duration,
@@ -153,12 +218,6 @@ class TaskRepo {
         updatedAt: DateTime.now(),
       ),
     );
-    final overrides = await _taskOverrideDao.getOverridesForTask(taskId);
-    for (var ovr in overrides) {
-      await _taskOverrideDao.upsertOverride(
-        ovr.copyWith(rid: ovr.rid.add(offset)),
-      );
-    }
   }
 
   Future<void> rescheduleOneInstancePattern(
@@ -175,11 +234,7 @@ class TaskRepo {
       startTime: startTime,
       duration: duration,
     );
-    await _taskOverrideDao.upsertOverride(to);
-    await _taskPatternDao.markPatternDirty(
-      taskId,
-      DateTime.now().millisecondsSinceEpoch,
-    );
+    await overrideTask(to);
   }
 
   Future<void> rescheduleThisAndFuturePattern(
@@ -190,7 +245,7 @@ class TaskRepo {
   ) async {
     TaskPattern? pattern = await _taskPatternDao.getPatternById(taskId);
     if (pattern == null) return;
-    await _taskPatternDao.upsertPattern(
+    await upsertPattern(
       pattern.copyWith(
         rrule: pattern.rrule?.copyWith(
           until: pattern.rrule?.count == null
@@ -210,6 +265,6 @@ class TaskRepo {
       rev: DateTime.now().millisecondsSinceEpoch,
       updatedAt: DateTime.now(),
     );
-    await _taskPatternDao.upsertPattern(newPattern);
+    await upsertPattern(newPattern);
   }
 }

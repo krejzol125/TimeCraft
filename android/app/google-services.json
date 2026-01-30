@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "98494694512",
+    "project_id": "timecraft-1cbe5",
+    "storage_bucket": "timecraft-1cbe5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:98494694512:android:546302736fd19b768c20b5",
+        "android_client_info": {
+          "package_name": "com.example.timecraft"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBgmfn4OfIv1fGw1_kxXWpN6FK01zrPO68"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

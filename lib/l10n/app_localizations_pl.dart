@@ -45,7 +45,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get basics => 'Podstawy';
 
   @override
-  String get schedule => 'Harmonogram';
+  String get schedule => 'Czas';
 
   @override
   String get completion => 'Wykonanie';
@@ -111,7 +111,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get occurrences => 'Wystąpienia';
 
   @override
-  String get ends => 'Kończy się';
+  String get ends => 'Koniec:';
 
   @override
   String get never => 'Nigdy';
