@@ -31,9 +31,9 @@ class _DraggableButtonState extends State<DraggableButton>
     });
   }
 
-  double _mass = 1;
-  double _stiffness = 200;
-  double _damping = 15;
+  final double _mass = 1;
+  final double _stiffness = 200;
+  final double _damping = 15;
   SpringDescription get _defaultSpring =>
       SpringDescription(mass: _mass, stiffness: _stiffness, damping: _damping);
 
