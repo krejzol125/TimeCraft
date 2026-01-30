@@ -203,7 +203,7 @@ abstract class AppLocalizations {
   /// No description provided for @completion.
   ///
   /// In en, this message translates to:
-  /// **'Completion'**
+  /// **'Status'**
   String get completion;
 
   /// No description provided for @description.

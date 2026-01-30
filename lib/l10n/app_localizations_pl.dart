@@ -262,7 +262,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get unscheduled => 'Bez terminu';
 
   @override
-  String get completed => 'Ukończone';
+  String get completed => 'Status';
 
   @override
   String get subtasks => 'Podzadania';

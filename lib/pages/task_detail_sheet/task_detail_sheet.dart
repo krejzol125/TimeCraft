@@ -7,6 +7,8 @@ import 'package:timecraft/model/task_override.dart';
 import 'package:timecraft/model/task_pattern.dart';
 import 'package:timecraft/pages/add_task_sheet/add_task_multi_sheet.dart';
 import 'package:timecraft/repo/task_repo.dart';
+import 'package:timecraft/system_design/tc_button.dart';
+import 'package:timecraft/system_design/tc_stepper.dart';
 
 class TaskDetailsSheet extends StatefulWidget {
   const TaskDetailsSheet({super.key, required this.task, required this.repo});
@@ -34,7 +36,6 @@ class TaskDetailsSheet extends StatefulWidget {
 }
 
 class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
-  // tokeny jak u Ciebie
   static const bgCard = Color(0xFFF6F7FB);
   static const stroke = Color(0xFFB9BFCC);
   static const text = Color(0xFF111827);
@@ -55,22 +56,14 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
 
   String _fmtDate(DateTime dt) => '${dt.day}.${dt.month}.${dt.year}';
 
-  bool _isDone(Completion c) {
-    // jeśli masz BinaryCompletion(bool)
-    if (c is BinaryCompletion) return c.isCompleted;
-    // jeśli masz inne typy, dopasuj
-    return false;
-  }
-
-  Completion _toggleCompletion(Completion c, bool value) {
-    if (c is BinaryCompletion) return BinaryCompletion(value);
-    // inne typy completion: możesz zdecydować co robić
-    return BinaryCompletion(value);
+  Completion _toggleCompletion(Completion c, int value) {
+    c.mark(value);
+    return c;
   }
 
   int _priorityToStars(int p) => p.clamp(1, 5);
 
-  Future<void> _setCompleted(bool value) async {
+  Future<void> _setCompleted(int value) async {
     setState(() => _saving = true);
     try {
       if (_task.rid == null) {
@@ -192,13 +185,11 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
                 ),
                 const SizedBox(height: 12),
 
-                // Header
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // priority badge
                       _PriorityBadge(stars: _priorityToStars(_task.priority)),
                       const SizedBox(width: 10),
 
@@ -239,7 +230,6 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
                         ),
                       ),
 
-                      // close
                       IconButton(
                         onPressed: () => Navigator.of(context).pop(),
                         icon: const Icon(Icons.close_rounded),
@@ -257,13 +247,14 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
                     controller: scrollController,
                     padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
                     children: [
-                      // Completed toggle
                       _Card(
                         child: Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.check_circle_rounded,
-                              color: accent,
+                              color: _task.completion.isCompleted
+                                  ? accent
+                                  : subtext,
                             ),
                             const SizedBox(width: 10),
                             Expanded(
@@ -283,18 +274,40 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
                                   strokeWidth: 2,
                                 ),
                               )
-                            else
+                            else if (_task.completion is BinaryCompletion) ...[
                               Switch(
-                                value: _isDone(_task.completion),
-                                onChanged: _setCompleted,
+                                value: _task.completion.isCompleted,
+                                onChanged: (comp) async {
+                                  await _setCompleted(comp ? 1 : 0);
+                                },
                               ),
+                            ] else if (_task.completion
+                                is QuantityCompletion) ...[
+                              TcStepper(
+                                value: (_task.completion as QuantityCompletion)
+                                    .comp,
+                                onChanged: (comp) async {
+                                  await _setCompleted(comp);
+                                },
+                                min: 0,
+                                max: (_task.completion as QuantityCompletion)
+                                    .cap,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '/${(_task.completion as QuantityCompletion).cap}',
+                                style: const TextStyle(
+                                  color: subtext,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
 
                       const SizedBox(height: 10),
 
-                      // Description
                       if (_task.description.trim().isNotEmpty)
                         _Card(
                           title: l10n.description,
@@ -311,7 +324,6 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
                       if (_task.description.trim().isNotEmpty)
                         const SizedBox(height: 10),
 
-                      // Subtasks
                       if (_task.subTasks.isNotEmpty)
                         _Card(
                           title: l10n.subtasks,
@@ -353,18 +365,17 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
 
                       if (_task.subTasks.isNotEmpty) const SizedBox(height: 10),
 
-                      // Meta
                       _Card(
                         title: l10n.details,
                         child: Column(
                           children: [
-                            _MetaRow(
+                            _DataRow(
                               label: l10n.priority,
                               value: '${_task.priority}/5',
                               icon: Icons.bolt_rounded,
                             ),
                             const SizedBox(height: 6),
-                            _MetaRow(
+                            _DataRow(
                               label: l10n.reminders,
                               value: '${_task.reminders.length}',
                               icon: Icons.notifications_active_rounded,
@@ -375,11 +386,10 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
 
                       const SizedBox(height: 14),
 
-                      // Action buttons
                       Row(
                         children: [
                           Expanded(
-                            child: _PrimaryButton(
+                            child: TcButton(
                               icon: Icons.edit_rounded,
                               label: l10n.edit,
                               onTap: _onEdit,
@@ -387,7 +397,8 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
                           ),
                           const SizedBox(width: 10),
                           Expanded(
-                            child: _SecondaryButton(
+                            child: TcButton(
+                              primary: false,
                               icon: Icons.close_rounded,
                               label: l10n.close,
                               onTap: () => Navigator.of(context).pop(),
@@ -406,8 +417,6 @@ class _TaskDetailsSheetState extends State<TaskDetailsSheet> {
     );
   }
 }
-
-// ===== small UI pieces =====
 
 class _Card extends StatelessWidget {
   const _Card({required this.child, this.title});
@@ -531,8 +540,8 @@ class _PriorityBadge extends StatelessWidget {
   }
 }
 
-class _MetaRow extends StatelessWidget {
-  const _MetaRow({
+class _DataRow extends StatelessWidget {
+  const _DataRow({
     required this.label,
     required this.value,
     required this.icon,
@@ -569,96 +578,96 @@ class _MetaRow extends StatelessWidget {
   }
 }
 
-class _PrimaryButton extends StatelessWidget {
-  const _PrimaryButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
+// class _PrimaryButton extends StatelessWidget {
+//   const _PrimaryButton({
+//     required this.icon,
+//     required this.label,
+//     required this.onTap,
+//   });
 
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
+//   final IconData icon;
+//   final String label;
+//   final VoidCallback onTap;
 
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: _TaskDetailsSheetState.accent.withValues(alpha: 0.12),
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: _TaskDetailsSheetState.accent.withValues(alpha: 0.35),
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: _TaskDetailsSheetState.accent),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: _TaskDetailsSheetState.accent,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Material(
+//       color: _TaskDetailsSheetState.accent.withValues(alpha: 0.12),
+//       borderRadius: BorderRadius.circular(16),
+//       child: InkWell(
+//         onTap: onTap,
+//         borderRadius: BorderRadius.circular(16),
+//         child: Container(
+//           padding: const EdgeInsets.symmetric(vertical: 12),
+//           decoration: BoxDecoration(
+//             borderRadius: BorderRadius.circular(16),
+//             border: Border.all(
+//               color: _TaskDetailsSheetState.accent.withValues(alpha: 0.35),
+//             ),
+//           ),
+//           child: Row(
+//             mainAxisAlignment: MainAxisAlignment.center,
+//             children: [
+//               Icon(icon, color: _TaskDetailsSheetState.accent),
+//               const SizedBox(width: 8),
+//               Text(
+//                 label,
+//                 style: const TextStyle(
+//                   color: _TaskDetailsSheetState.accent,
+//                   fontWeight: FontWeight.w900,
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
-class _SecondaryButton extends StatelessWidget {
-  const _SecondaryButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
+// class _SecondaryButton extends StatelessWidget {
+//   const _SecondaryButton({
+//     required this.icon,
+//     required this.label,
+//     required this.onTap,
+//   });
 
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
+//   final IconData icon;
+//   final String label;
+//   final VoidCallback onTap;
 
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white.withValues(alpha: 0.55),
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: _TaskDetailsSheetState.stroke.withValues(alpha: 0.85),
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: _TaskDetailsSheetState.subtext),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: _TaskDetailsSheetState.subtext,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Material(
+//       color: Colors.white.withValues(alpha: 0.55),
+//       borderRadius: BorderRadius.circular(16),
+//       child: InkWell(
+//         onTap: onTap,
+//         borderRadius: BorderRadius.circular(16),
+//         child: Container(
+//           padding: const EdgeInsets.symmetric(vertical: 12),
+//           decoration: BoxDecoration(
+//             borderRadius: BorderRadius.circular(16),
+//             border: Border.all(
+//               color: _TaskDetailsSheetState.stroke.withValues(alpha: 0.85),
+//             ),
+//           ),
+//           child: Row(
+//             mainAxisAlignment: MainAxisAlignment.center,
+//             children: [
+//               Icon(icon, color: _TaskDetailsSheetState.subtext),
+//               const SizedBox(width: 8),
+//               Text(
+//                 label,
+//                 style: const TextStyle(
+//                   color: _TaskDetailsSheetState.subtext,
+//                   fontWeight: FontWeight.w900,
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }

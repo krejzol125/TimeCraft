@@ -60,7 +60,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get schedule => 'Schedule';
 
   @override
-  String get completion => 'Completion';
+  String get completion => 'Status';
 
   @override
   String get description => 'Description';

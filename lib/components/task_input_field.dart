@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:timecraft/l10n/app_localizations.dart';
-import 'package:timecraft/system_design/tc_fext_field.dart';
+import 'package:timecraft/system_design/tc_text_field.dart';
 
 class TaskInputParsed {
   final String raw;

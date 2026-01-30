@@ -9,7 +9,7 @@ import 'package:timecraft/components/task_input_field.dart';
 import 'package:timecraft/model/completion.dart';
 import 'package:timecraft/model/task_pattern.dart';
 import 'package:timecraft/system_design/tc_button.dart';
-import 'package:timecraft/system_design/tc_fext_field.dart';
+import 'package:timecraft/system_design/tc_text_field.dart';
 import 'package:timecraft/system_design/tc_input_decorator.dart';
 import 'package:timecraft/system_design/tc_radio_button.dart';
 
@@ -286,50 +286,26 @@ class _AddTaskSheetMultiStepState extends State<AddTaskSheetMultiStep> {
                             children: [
                               Expanded(
                                 child: TcButton(
-                                  outlined: true,
+                                  primary: false,
                                   onTap: _step == 0
                                       ? () => Navigator.of(
                                           context,
                                         ).maybePop<TaskPattern>(null)
                                       : _back,
-                                  child: Text(
-                                    _step == 0 ? l10n.cancel : l10n.back,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                    ),
-                                  ),
+                                  label: _step == 0 ? l10n.cancel : l10n.back,
+                                  icon: _step == 0
+                                      ? Icons.close_rounded
+                                      : Icons.arrow_back_rounded,
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: TcButton(
                                   onTap: _step == 2 ? _submit : _next,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        _step == 2
-                                            ? Icons.check_rounded
-                                            : Icons.arrow_forward_rounded,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        _step == 2 ? l10n.create : l10n.next,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.primary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                  label: _step == 2 ? l10n.create : l10n.next,
+                                  icon: _step == 2
+                                      ? Icons.check_rounded
+                                      : Icons.arrow_forward_rounded,
                                 ),
                               ),
                             ],

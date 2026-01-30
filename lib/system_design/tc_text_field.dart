@@ -14,6 +14,7 @@ class TcTextField extends StatefulWidget {
     this.leading,
     this.trailing,
     this.maxLines = 1,
+    this.obscureText = false,
   }) : super();
   final String? labelText;
   final String? hintText;
@@ -26,6 +27,7 @@ class TcTextField extends StatefulWidget {
   final Widget? leading;
   final Widget? trailing;
   final int maxLines;
+  final bool obscureText;
 
   @override
   State<TcTextField> createState() => _TcTextFieldState();
@@ -59,6 +61,7 @@ class _TcTextFieldState extends State<TcTextField> {
       maxLines: widget.maxLines,
       onChanged: widget.onChanged,
       onSubmitted: widget.onSubmitted,
+      obscureText: widget.obscureText,
     );
   }
 }

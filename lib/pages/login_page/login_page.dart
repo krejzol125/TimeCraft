@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:timecraft/auth/session_cubit.dart';
+import 'package:timecraft/system_design/tc_button.dart';
+import 'package:timecraft/system_design/tc_text_field.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -55,15 +57,12 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                TextField(
-                  controller: email,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                ),
+                TcTextField(controller: email, labelText: 'Email'),
                 const SizedBox(height: 8),
-                TextField(
+                TcTextField(
                   controller: pass,
                   obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password'),
+                  labelText: 'Password',
                 ),
                 const SizedBox(height: 16),
                 if (loading)
@@ -72,16 +71,19 @@ class _LoginPageState extends State<LoginPage> {
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton(
-                          onPressed: _signup,
-                          child: const Text('Sign up'),
+                        child: TcButton(
+                          primary: false,
+                          onTap: _signup,
+                          label: 'Sign up',
+                          icon: Icons.person_add,
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: ElevatedButton(
-                          onPressed: _signin,
-                          child: const Text('Sign in'),
+                        child: TcButton(
+                          onTap: _signin,
+                          label: 'Sign in',
+                          icon: Icons.login,
                         ),
                       ),
                     ],
