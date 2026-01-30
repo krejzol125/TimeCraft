@@ -137,10 +137,14 @@ class _RRulePickerState extends State<RRulePicker> {
               ],
               const SizedBox(height: 12),
 
-              Row(
+              Flex(
+                direction: MediaQuery.of(context).size.width > 750
+                    ? Axis.horizontal
+                    : Axis.vertical,
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Expanded(
+                  Container(
+                    constraints: const BoxConstraints(maxWidth: 250),
                     child: TcInputDecorator(
                       labelText: l10n.interval,
                       child: Row(
@@ -168,8 +172,9 @@ class _RRulePickerState extends State<RRulePicker> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
+                  const SizedBox(width: 8, height: 8),
+                  Container(
+                    constraints: const BoxConstraints(maxWidth: 250),
                     child: TcInputDecorator(
                       labelText: l10n.limit,
                       child: Column(

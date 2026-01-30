@@ -445,7 +445,7 @@ class _StepHeader extends StatelessWidget {
                         ? Theme.of(context).colorScheme.primary
                         : Colors.black.withValues(alpha: 0.55),
                     fontWeight: FontWeight.w900,
-                    fontSize: 13.5,
+                    fontSize: 12,
                   ),
                 ),
               ],

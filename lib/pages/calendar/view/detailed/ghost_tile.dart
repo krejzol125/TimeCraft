@@ -59,6 +59,7 @@ class GhostTile extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     color: Colors.black87,
                   ),
+                  maxLines: 1,
                 ),
               ),
             ),
