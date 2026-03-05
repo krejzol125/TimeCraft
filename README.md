@@ -1,4 +1,4 @@
-# TimeCraft ⏱️📆
+# TimeCraft
 
 **TimeCraft** is a cross-platform task and calendar application built with **Flutter**, focused on advanced scheduling, recurring tasks, offline-first architecture and smooth, interactive calendar views.
 
